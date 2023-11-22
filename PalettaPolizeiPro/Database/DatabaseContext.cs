@@ -9,6 +9,7 @@ namespace PalettaPolizeiPro.Database
     {
         private static string? _connectionString {  get; set; }   
         public DbSet<User> Users { get; set; }
+        public DbSet<Order> Orders { get; set; }
         public DatabaseContext() : base()
         {
 
@@ -16,17 +17,14 @@ namespace PalettaPolizeiPro.Database
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (_connectionString is null) { throw new Exception("Connection string is empty..."); }
-
             if (_connectionString.Contains("Host="))
             {
                 optionsBuilder.UseNpgsql(_connectionString);
-
             }
             else
             {
                 optionsBuilder.UseSqlServer(_connectionString);
             }
-
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -5,20 +5,34 @@ using PalettaPolizeiPro.Database;
 
 namespace PalettaPolizeiPro.Services
 {
-    public class UserService
+    public class UserService : DatabaseContext, IUserService
     {
-        private DatabaseContext _database;
-        public UserService(DatabaseContext context)
+        public UserService()
         {
-            _database = context;
         }
         public List<User> GetUsers()
         {
-            return _database.Users.AsNoTracking().ToList();
+            return Users.AsNoTracking().ToList();
+        }
+        public Task<List<User>> GetUsersAsync()
+        {
+            return Task.Run(() => GetUsers());
+        }
+        public User? GetUserByUsername(string username)
+        {
+            return Users.AsNoTracking().FirstOrDefault(x => x.Username == username);
+        }
+        public Task<User?> GetUserByUsernameAsync(string username)
+        {
+            return Users.AsNoTracking().FirstOrDefaultAsync(x => x.Username == username);
         }
         public void AddUser(User user)
         {
-            _database.Users.Add(user);
+            Users.Add(user);
+        }
+        public Task AddUserAsync(User user)
+        {
+            return Task.Run(() => AddUser(user));
         }
         public void UpdateUser(User user)
         {
@@ -26,20 +40,24 @@ namespace PalettaPolizeiPro.Services
             {
                 throw new Exception("This user does not exist");
             }
-            var existingUser = _database.Users.Find(user.Id);
+            var existingUser = Users.Find(user.Id);
             if (existingUser != null)
             {
-                _database.Entry(existingUser).CurrentValues.SetValues(user);
-                _database.SaveChanges();
+                Entry(existingUser).CurrentValues.SetValues(user);
+                SaveChanges();
             }
+        }
+        public Task UpdateUserAsync(User user)
+        {
+            return Task.Run(() => UpdateUser(user));
         }
         public void Save()
         {
-            _database.SaveChanges();
+            SaveChanges();
         }
         public async Task SaveAsync()
         {
-           await _database.SaveChangesAsync();
+            await SaveChangesAsync();
         }
     }
 }

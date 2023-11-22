@@ -7,10 +7,10 @@ namespace PalettaPolizeiPro.Data.Stations
     {
         public string Alias { get; init; }
         public string Name { get; init; }
+        public int Loop { get; init; }
         public string IP { get; init; }
         public int Rack { get; init; }
         public int Slot { get; init; }
         public int DB { get; init; }
-        public int Loop { get; init; }
     }
 }

@@ -1,5 +1,5 @@
 ﻿@inherits LayoutComponentBase
-
+@if (MyClient.NameToShow is null) { return; }
 <MudThemeProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
@@ -25,7 +25,16 @@
 </MudLayout>
 
 @code {
+
     bool _drawerOpen = true;
+
+    protected override void OnInitialized()
+    {
+        if (MyClient.User is null && MyClient.Station is null)
+        {
+            NavManager.NavigateTo("/login");
+        }
+    }
 
     void DrawerToggle()
     {

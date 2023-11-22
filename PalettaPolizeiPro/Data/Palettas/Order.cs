@@ -13,7 +13,7 @@ namespace PalettaPolizeiPro.Data.Palettas
     }
     public class Order
     {
-        public string SchedulerName { get; set; }
+        public User User { get; set; }
         public List<Paletta> ScheduledPalettas { get; set; }
         public List<Paletta> FinishedPalettas { get; set; }
         public DateTime? Scheduled { get; set; }
