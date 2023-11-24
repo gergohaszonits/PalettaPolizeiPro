@@ -1,14 +1,14 @@
 ﻿using PalettaPolizeiPro.Data;
 using PalettaPolizeiPro.Database;
-using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography;
 using System.Text;
 
 namespace PalettaPolizeiPro.Services
 {
-    public class LoginService : DatabaseContext
+    public class LoginService : DatabaseContext, ILoginService
     {
         private IUserService _userService;
+
         public LoginService(IUserService userService)
         {
             _userService = userService;
@@ -25,15 +25,17 @@ namespace PalettaPolizeiPro.Services
             StringBuilder Sb = new StringBuilder();
             using (SHA256 hash = SHA256.Create())
             {
-                Encoding enc = Encoding.UTF8;
-                Byte[] result = hash.ComputeHash(enc.GetBytes(value));
-
+                Byte[] result = hash.ComputeHash(Encoding.UTF8.GetBytes(value));
                 foreach (Byte b in result)
                 {
                     Sb.Append(b.ToString("x2"));
                 }
             }
             return Sb.ToString();
+        }
+        public void LogOut(User user)
+        {
+            throw new NotImplementedException();
         }
     }
 }

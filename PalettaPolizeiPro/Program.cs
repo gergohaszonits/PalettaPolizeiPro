@@ -18,8 +18,6 @@ string? cs = builder.Configuration.GetConnectionString("Default");
 Console.WriteLine(cs);  
 if (cs is null) { throw new Exception("Please enter a valid connection string in appsettings.json"); }
 
-DatabaseContext.SetConnectionString(cs);
-
 builder.Services.AddScoped(typeof(IUserService),typeof(UserService));
 builder.Services.AddScoped(typeof(Client));
 
@@ -29,7 +27,6 @@ builder.Services.AddBlazoredLocalStorage(config => config.JsonSerializerOptions.
 #if RELEASE
     builder.WebHost.UseUrls("http://*:80");
 #endif
-
 
 var app = builder.Build();
 
