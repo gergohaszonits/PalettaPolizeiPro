@@ -2,6 +2,7 @@ using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Hosting.StaticWebAssets;
+using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 using PalettaPolizeiPro.Data;
 using PalettaPolizeiPro.Database;
@@ -17,6 +18,9 @@ builder.Services.AddMudServices();
 string? cs = builder.Configuration.GetConnectionString("Default");
 Console.WriteLine(cs);  
 if (cs is null) { throw new Exception("Please enter a valid connection string in appsettings.json"); }
+DatabaseContext.SetConnectionString(cs);
+
+new DatabaseContext().Database.Migrate();
 
 builder.Services.AddScoped(typeof(IUserService),typeof(UserService));
 builder.Services.AddScoped(typeof(ILoginService), typeof(LoginService));

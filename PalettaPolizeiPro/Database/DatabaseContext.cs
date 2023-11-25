@@ -16,7 +16,6 @@ namespace PalettaPolizeiPro.Database
         public DbSet<PalettaNotification> PalettaNotifications { get; set; }
         public DbSet<UserNotification> UserNotifications { get; set; }
 
-
         public DatabaseContext() : base()
         {
 

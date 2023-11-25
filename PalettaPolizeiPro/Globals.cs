@@ -4,7 +4,8 @@ namespace PalettaPolizeiPro
 {
     public static class Globals
     {
-        public static readonly MudTheme Theme = new MudTheme
+        
+        public static MudTheme MainTheme = new MudTheme
         {
             Palette = new Palette
             {
@@ -13,5 +14,7 @@ namespace PalettaPolizeiPro
                 Error = Colors.Purple.Darken4,
             }
         };
+
+        public static bool ProgramRunning = true;
     }
 }
