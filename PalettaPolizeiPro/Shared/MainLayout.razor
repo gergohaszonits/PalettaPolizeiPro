@@ -1,6 +1,10 @@
-﻿@inherits LayoutComponentBase
-@if (MyClient.NameToShow is null) { return; }
-<MudThemeProvider />
+﻿@using PalettaPolizeiPro.Pages
+@inherits LayoutComponentBase
+@if (MyClient.User is null)
+{
+    return;
+}
+<MudThemeProvider Theme="Theme"/>
 <MudDialogProvider />
 <MudSnackbarProvider />
 
@@ -19,7 +23,7 @@
     </MudDrawer>
     <MudMainContent>
         <MudContainer MaxWidth="MaxWidth.Large" Class="my-16 pt-16">
-            @Body
+                @Body               
         </MudContainer>
     </MudMainContent>
 </MudLayout>
@@ -30,7 +34,7 @@
 
     protected override void OnInitialized()
     {
-        if (MyClient.User is null && MyClient.Station is null)
+        if (MyClient.User is null)
         {
             NavManager.NavigateTo("/login");
         }

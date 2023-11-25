@@ -1,0 +1,56 @@
+﻿<MudDialog @onkeypress="@((e)=>{if(e.Key =="Enter"){Submit();}})">
+    <DialogContent>
+        <div class="d-flex flex-column gap-5">
+            <MudTextField Variant="Variant.Outlined" Placeholder="Név" @bind-Value="_username"></MudTextField>
+            <MudTextField Variant="Variant.Outlined"  @bind-Value="_password" Label="Jelszó" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ToggleShow" AdornmentAriaLabel="Jelszó mutatása" />
+        </div>
+        @if (MyClient.Station is not null)
+        {
+           
+        }
+        else
+        {
+            <MudButton StartIcon="@Icons.Material.Filled.VpnKeyOff" Disabled="true" >EKS kulccsal való belépés nem elérhető</MudButton>
+        }
+    </DialogContent>
+    
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="Submit">Belépés</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+
+    private string _username = String.Empty;
+    private string _password = String.Empty;
+
+    [CascadingParameter] MudDialogInstance? ThisDialog { get; set; }
+
+
+    void Submit()
+    {
+        var loginData = new UserCredentialsDTO { Password = _username, Username = _password };
+        ThisDialog!.Close(DialogResult.Ok(loginData));
+        Console.WriteLine($"Entered: {_username} {_password}");
+    }
+
+    void Cancel() => ThisDialog!.Cancel();
+    bool isShow;
+    InputType PasswordInput = InputType.Password;
+    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    void ToggleShow()
+    {
+        @if (isShow)
+        {
+            isShow = false;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+        else
+        {
+            isShow = true;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
+        }
+    }
+}

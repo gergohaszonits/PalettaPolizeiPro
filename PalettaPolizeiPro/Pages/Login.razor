@@ -1,7 +1,49 @@
-﻿@layout EmptyLayout
-
-
+﻿@page "/login"
+@using PalettaPolizeiPro.Dialogs
+@layout EmptyLayout
 
 @code {
 
+    protected override void OnInitialized()
+    {
+        if (MyClient.User is not null)
+        {
+            NavManager.NavigateTo("/");
+            return;
+        }
+
+        TryLogin();
+    }
+    async void TryLogin()
+    {
+        while (MyClient.User is null)
+        {
+            await ShowLoginDialog();
+        }
+    }
+    async Task ShowLoginDialog()
+    {
+
+        var dialog = await Dialog.ShowAsync<LoginDialog>("Bejelentkezés", new DialogOptions
+            {
+                CloseButton = false,
+                DisableBackdropClick = true,
+                CloseOnEscapeKey = false,
+            });
+        var result = await dialog.Result;
+        UserCredentialsDTO cred = (UserCredentialsDTO)result.Data;
+        try
+        {
+            var user = LoginService.LogIn(cred);
+            if (user is null)
+            {
+                Snackbar.Add("Sikertelen bejelentkezés");    
+            }
+            //login cuccos
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
 }

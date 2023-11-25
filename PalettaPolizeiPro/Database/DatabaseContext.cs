@@ -10,6 +10,13 @@ namespace PalettaPolizeiPro.Database
         private static string? _connectionString {  get; set; }   
         public DbSet<User> Users { get; set; }
         public DbSet<Order> Orders { get; set; }
+        public DbSet<Paletta> Palettas { get; set; }
+        public DbSet<PalettaProperty> PalettaProperties { get; set; }
+        public DbSet<QueryNotification> QueryNotifications { get; set; }
+        public DbSet<PalettaNotification> PalettaNotifications { get; set; }
+        public DbSet<UserNotification> UserNotifications { get; set; }
+
+
         public DatabaseContext() : base()
         {
 

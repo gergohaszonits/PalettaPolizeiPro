@@ -1,4 +1,5 @@
 ﻿using PalettaPolizeiPro.Data;
+using PalettaPolizeiPro.Data.DataTransferObjects;
 using PalettaPolizeiPro.Database;
 using System.Security.Cryptography;
 using System.Text;
@@ -13,11 +14,16 @@ namespace PalettaPolizeiPro.Services
         {
             _userService = userService;
         }
-        public User? LogIn(string username, string password)
+        public User? LogIn(UserCredentialsDTO cred)
         {
-            var user = _userService.GetUserByUsername(username);
+            if (cred.Username is null || cred.Username == String.Empty || cred.Password is null || cred.Password == String.Empty)
+            {
+                throw new Exception("A belépéshez add meg az adatokat.");
+            }
+
+            var user = _userService.GetUserByUsername(cred.Username);
             if (user is null) { return null; }
-            string hash = HashString(password);
+            string hash = HashString(cred.Password);
             return hash != user.Password ? null : user;
         }
         private static string HashString(String value)
@@ -37,5 +43,7 @@ namespace PalettaPolizeiPro.Services
         {
             throw new NotImplementedException();
         }
+
+        
     }
 }

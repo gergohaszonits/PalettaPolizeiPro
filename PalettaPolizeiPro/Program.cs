@@ -19,6 +19,8 @@ Console.WriteLine(cs);
 if (cs is null) { throw new Exception("Please enter a valid connection string in appsettings.json"); }
 
 builder.Services.AddScoped(typeof(IUserService),typeof(UserService));
+builder.Services.AddScoped(typeof(ILoginService), typeof(LoginService));
+
 builder.Services.AddScoped(typeof(Client));
 
 builder.Services.AddBlazoredLocalStorage();
