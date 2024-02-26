@@ -1,5 +1,5 @@
 ﻿@page "/login"
-@using PalettaPolizeiPro.Dialogs
+@    using PalettaPolizeiPro.Dialogs
 @layout EmptyLayout
 
 @code {
@@ -27,7 +27,7 @@
                     CloseButton = false,
                     DisableBackdropClick = true,
                     CloseOnEscapeKey = false,
-                    FullScreen = true,
+                    FullScreen = false,
                 });
             var result  = await dialog.Result;
             UserCredentialsDTO cred = (UserCredentialsDTO)result.Data;

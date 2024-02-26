@@ -1,4 +1,4 @@
-﻿using PalettaPolizeiPro.Services;
+﻿using PalettaPolizeiPro.Services.PLC;
 
 namespace PalettaPolizeiPro.Data
 {

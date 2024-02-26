@@ -1,20 +1,23 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using PalettaPolizeiPro.Data;
 using PalettaPolizeiPro.Database;
 
 namespace PalettaPolizeiPro.Services
 {
-    public class UserService : DatabaseContext, IUserService
+    public class UserService : IUserService
     {
         public UserService()
         {
-            Console.WriteLine("UserService created");
 
         }
         public List<User> GetUsers()
         {
-            return Users.AsNoTracking().ToList();
+            using (var context = new DatabaseContext())
+            {
+                return context.Users.AsNoTracking().ToList();
+            }
         }
         public Task<List<User>> GetUsersAsync()
         {
@@ -22,23 +25,35 @@ namespace PalettaPolizeiPro.Services
         }
         public User? GetUserByUsername(string username)
         {
-            var item =  Users.AsNoTracking().FirstOrDefault(x => x.Username == username);
-            return item;
+            using (var context = new DatabaseContext())
+            {
+                var item = context.Users.AsNoTracking().FirstOrDefault(x => x.Username == username);
+                return item;
+            }
 
         }
         public List<User> GetUsersByAuth(Authorization auth)
         {
-            var users = Users.AsNoTracking().Where(x => x.Authorizations.Contains(auth)).ToList();
-            return users;
+            using (var context = new DatabaseContext())
+            {
+                var users = context.Users.AsNoTracking().Where(x => x.Authorizations.Contains(auth)).ToList();
+                return users;
+            }
 
         }
         public Task<User?> GetUserByUsernameAsync(string username)
         {
-            return Users.AsNoTracking().FirstOrDefaultAsync(x => x.Username == username);
+            using (var context = new DatabaseContext())
+            {
+                return context.Users.AsNoTracking().FirstOrDefaultAsync(x => x.Username == username);
+            }
         }
         public void AddUser(User user)
         {
-            Users.Add(user);
+            using (var context = new DatabaseContext())
+            {
+                context.Users.Add(user);
+            }
         }
         public Task AddUserAsync(User user)
         {
@@ -46,28 +61,23 @@ namespace PalettaPolizeiPro.Services
         }
         public void UpdateUser(User user)
         {
-            if (user.Id == 0)
+            using (var context = new DatabaseContext())
             {
-                throw new Exception("This user does not exist");
-            }
-            var existingUser = Users.Find(user.Id);
-            if (existingUser != null)
-            {
-                Entry(existingUser).CurrentValues.SetValues(user);
-                SaveChanges();
+                if (user.Id == 0)
+                {
+                    throw new Exception("This user does not exist");
+                }
+                var existingUser = context.Users.Find(user.Id);
+                if (existingUser != null)
+                {
+                    context.Entry(existingUser).CurrentValues.SetValues(user);
+                    context.SaveChanges();
+                }
             }
         }
         public Task UpdateUserAsync(User user)
         {
             return Task.Run(() => UpdateUser(user));
-        }
-        public void Save()
-        {
-            SaveChanges();
-        }
-        public async Task SaveAsync()
-        {
-            await SaveChangesAsync();
         }
     }
 }

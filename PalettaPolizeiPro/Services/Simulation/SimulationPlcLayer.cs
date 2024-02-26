@@ -1,5 +1,6 @@
 ﻿using MudBlazor;
 using PalettaPolizeiPro.Data;
+using PalettaPolizeiPro.Services.PLC;
 using System.Drawing;
 using System.Runtime.InteropServices;
 

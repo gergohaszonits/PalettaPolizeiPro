@@ -1,15 +1,16 @@
 ﻿using Microsoft.Identity.Client;
 using PalettaPolizeiPro.Data;
 using PalettaPolizeiPro.Data.Palettas;
+using PalettaPolizeiPro.Services.PLC;
 using Sharp7;
 
-namespace PalettaPolizeiPro.Services
+namespace PalettaPolizeiPro.Services.PalettaControl
 {
     public class PalettaControlService : IPalettaControlService
     {
         private PalettaControlService() { }
         private static PalettaControlService _instance = new PalettaControlService();
-        public static List<IPLCLayer>? PLCs { get ; set ; }
+        public static List<IPLCLayer>? PLCs { get; set; }
 
         public static void Init(List<IPLCLayer> plcs)
         {
@@ -18,7 +19,7 @@ namespace PalettaPolizeiPro.Services
         }
         private void ConnectAll()
         {
-            PLCs!.ForEach((x) => 
+            PLCs!.ForEach((x) =>
             {
                 x.Connect();
             });
@@ -30,12 +31,12 @@ namespace PalettaPolizeiPro.Services
         public PalettaProperty GetProperty(Station station)
         {
             var plc = FindPlcFromStation(station);
-            byte[] buffer = plc.GetBytes(station.DB,0,16);
+            byte[] buffer = plc.GetBytes(station.DB, 0, 16);
             string identifier = GetIdentifier(buffer, station);
 
             PalettaProperty property = new PalettaProperty
             {
-                 
+
             };
             return property;
 
@@ -49,13 +50,13 @@ namespace PalettaPolizeiPro.Services
         public QueryState GetQueryState(Station station)
         {
             IPLCLayer plc = FindPlcFromStation(station);
-            byte[] bytes = plc.GetBytes(10,10,10);
+            byte[] bytes = plc.GetBytes(10, 10, 10);
             QueryState query = new QueryState
             {
-               
+
             };
             return query;
-            
+
         }
         public void SetQueryState(QueryState state, Station station)
         {
@@ -91,7 +92,7 @@ namespace PalettaPolizeiPro.Services
 
             for (int i = 0; i < 2; i++)
             {
-                byte[] temp = new byte[1] { S7.GetByteAt(bytes, 0 + i) };
+                byte[] temp = new byte[1] { bytes.GetByteAt(0 + i) };
                 hex += BitConverter.ToString(temp);
             }
 

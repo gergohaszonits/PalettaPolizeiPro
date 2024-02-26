@@ -1,12 +1,12 @@
 ﻿using PalettaPolizeiPro.Data;
 
-namespace PalettaPolizeiPro.Services
+namespace PalettaPolizeiPro.Services.PLC
 {
     public interface IPLCLayer
     {
-        string IP {get;}
-        int Rack {get;}
-        int Slot {get;}
+        string IP { get; }
+        int Rack { get; }
+        int Slot { get; }
         bool IsConnected { get; }
         void SetBytes(int db, int index, int size, byte[] bytes);
         void SetBit(int db, int index, int bit, bool val);

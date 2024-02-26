@@ -3,7 +3,7 @@ using PalettaPolizeiPro;
 using PalettaPolizeiPro.Data;
 using Sharp7;
 
-namespace PalettaPolizeiPro.Services
+namespace PalettaPolizeiPro.Services.PLC
 {
     public class S7PLC : IPLCLayer
     {
@@ -18,6 +18,10 @@ namespace PalettaPolizeiPro.Services
             Rack = rack;
             Slot = slot;
             _client = new S7Client();
+        }
+        ~S7PLC() 
+        {
+            Disconnect();
         }
 
         public bool IsConnected => _client.Connected;

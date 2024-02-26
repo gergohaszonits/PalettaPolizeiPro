@@ -1,7 +1,8 @@
 ﻿using PalettaPolizeiPro.Data;
 using PalettaPolizeiPro.Data.Palettas;
+using PalettaPolizeiPro.Services.PLC;
 
-namespace PalettaPolizeiPro.Services
+namespace PalettaPolizeiPro.Services.PalettaControl
 {
     public interface IPalettaControlService
     {
@@ -11,5 +12,6 @@ namespace PalettaPolizeiPro.Services
         public static abstract IPalettaControlService GetInstance();
         public static abstract List<IPLCLayer>? PLCs { get; set; }
         public static abstract void Init(List<IPLCLayer> plcs);
+       
     }
 }
