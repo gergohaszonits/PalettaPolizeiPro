@@ -14,9 +14,8 @@ namespace PalettaPolizeiPro
         public void Start()
         {
             _mainThread = new Thread(Run);
-            _mainThread.Start();    
+            _mainThread.Start();
         }
-
         private void Run()
         {
             while (ProgramRunning)

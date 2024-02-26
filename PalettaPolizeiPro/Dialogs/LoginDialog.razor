@@ -1,19 +1,18 @@
 ﻿<MudDialog @onkeypress="@((e)=>{if(e.Key =="Enter"){Submit();}})">
     <DialogContent>
         <div class="d-flex flex-column gap-5">
-            <MudTextField Variant="Variant.Outlined" Placeholder="Név" @bind-Value="_username"></MudTextField>
-            <MudTextField Variant="Variant.Outlined"  @bind-Value="_password" Label="Jelszó" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ToggleShow" AdornmentAriaLabel="Jelszó mutatása" />
+            <MudTextField Immediate="true" Variant="Variant.Outlined" Placeholder="Név" @bind-Value="_username"></MudTextField>
+            <MudTextField Immediate="true" Variant="Variant.Outlined" @bind-Value="_password" Label="Jelszó" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ToggleShow" AdornmentAriaLabel="Jelszó mutatása" />
         </div>
         @if (MyClient.Station is not null)
         {
-           
+            <MudButton Color="Color.Success" StartIcon="@Icons.Material.Filled.VpnKey" Disabled="true">EKS belépés engedélyezve</MudButton>
         }
         else
         {
             <MudButton StartIcon="@Icons.Material.Filled.VpnKeyOff" Disabled="true" >EKS kulccsal való belépés nem elérhető</MudButton>
         }
     </DialogContent>
-    
     <DialogActions>
         <MudButton Color="Color.Primary" OnClick="Submit">Belépés</MudButton>
     </DialogActions>
@@ -28,9 +27,8 @@
 
     void Submit()
     {
-        var loginData = new UserCredentialsDTO { Password = _username, Username = _password };
+        var loginData = new UserCredentialsDTO { Password = _password, Username = _username };
         ThisDialog!.Close(DialogResult.Ok(loginData));
-        Console.WriteLine($"Entered: {_username} {_password}");
     }
 
     void Cancel() => ThisDialog!.Cancel();

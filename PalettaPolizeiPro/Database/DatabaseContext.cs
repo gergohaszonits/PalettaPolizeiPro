@@ -42,6 +42,8 @@ namespace PalettaPolizeiPro.Database
             modelBuilder.Entity<Paletta>()
             .HasMany(e => e.InFinished)
             .WithMany(e => e.FinishedPalettas);
+
+
         }
         public static void SetConnectionString(string connectionString)
         {

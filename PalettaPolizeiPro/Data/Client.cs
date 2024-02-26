@@ -1,6 +1,4 @@
-﻿using PalettaPolizeiPro.Data.Stations;
-
-namespace PalettaPolizeiPro.Data
+﻿namespace PalettaPolizeiPro.Data
 {
     public class Client
     {

@@ -2,16 +2,10 @@
 {
     public enum Authorization
     {
-        OrdersRead,
-        OrdersWrite,
-
-        SettingsRead,
-        SettingsWrite,
-
-        StatisticsRead,
-        NotificationRead,
-
-        CommentRead,
+        OrderEdit,
+        UserSettings,
         CommentWrite,
+        PlcSettings,
+        ServerSettings,
     }
 }

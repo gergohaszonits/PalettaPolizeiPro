@@ -1,6 +1,6 @@
 ﻿namespace PalettaPolizeiPro.Data.Palettas
 {
-    public class QueryState
+    public class QueryState : EntityObject
     {
         public string? PalettaName { get; set; }
         public byte? OperationStatus { get; set; }

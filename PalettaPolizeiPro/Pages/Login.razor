@@ -16,34 +16,34 @@
     }
     async void TryLogin()
     {
-        while (MyClient.User is null)
-        {
-            await ShowLoginDialog();
-        }
+        await ShowLoginDialog();
     }
     async Task ShowLoginDialog()
     {
-
-        var dialog = await Dialog.ShowAsync<LoginDialog>("Bejelentkezés", new DialogOptions
-            {
-                CloseButton = false,
-                DisableBackdropClick = true,
-                CloseOnEscapeKey = false,
-            });
-        var result = await dialog.Result;
-        UserCredentialsDTO cred = (UserCredentialsDTO)result.Data;
         try
         {
+            var dialog = await Dialog.ShowAsync<LoginDialog>("Bejelentkezés", new DialogOptions
+                {
+                    CloseButton = false,
+                    DisableBackdropClick = true,
+                    CloseOnEscapeKey = false,
+                    FullScreen = true,
+                });
+            var result  = await dialog.Result;
+            UserCredentialsDTO cred = (UserCredentialsDTO)result.Data;
             var user = LoginService.LogIn(cred);
             if (user is null)
             {
-                Snackbar.Add("Sikertelen bejelentkezés");    
+                Snackbar.Add("Sikertelen bejelentkezés");
             }
-            //login cuccos
+            else
+            {
+                Snackbar.Add($"Üdvözöljük {user.Username}");
+                MyClient.User = user;
+            }
         }
-        catch (Exception ex)
-        {
-            Snackbar.Add(ex.Message, Severity.Error);
-        }
+        catch (Exception  ex){ Snackbar.Add(ex.Message,Severity.Error); }
+        NavManager.NavigateTo("/");
     }
 }
+

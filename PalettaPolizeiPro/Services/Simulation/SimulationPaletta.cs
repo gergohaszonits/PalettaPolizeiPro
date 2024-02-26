@@ -1,11 +1,12 @@
 ﻿#nullable disable
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace PalettaPolizeiPro.Data.Palettas
+namespace PalettaPolizeiPro.Services.Simulation
 {
-    public class PalettaProperty : EntityObject
+    public class SimulationPaletta 
     {
         public string Identifier { get; set; }
+        public int Loop { get; set; }
         public int PredefiniedCycle { get; set; }
         public int ActualCycle { get; set; }
         public string EngineNumber { get; set; }

@@ -9,6 +9,8 @@ namespace PalettaPolizeiPro.Services
     {
         public UserService()
         {
+            Console.WriteLine("UserService created");
+
         }
         public List<User> GetUsers()
         {
@@ -20,7 +22,15 @@ namespace PalettaPolizeiPro.Services
         }
         public User? GetUserByUsername(string username)
         {
-            return Users.AsNoTracking().FirstOrDefault(x => x.Username == username);
+            var item =  Users.AsNoTracking().FirstOrDefault(x => x.Username == username);
+            return item;
+
+        }
+        public List<User> GetUsersByAuth(Authorization auth)
+        {
+            var users = Users.AsNoTracking().Where(x => x.Authorizations.Contains(auth)).ToList();
+            return users;
+
         }
         public Task<User?> GetUserByUsernameAsync(string username)
         {

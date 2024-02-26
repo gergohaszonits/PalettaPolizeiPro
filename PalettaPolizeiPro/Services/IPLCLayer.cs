@@ -1,22 +1,18 @@
-﻿using PalettaPolizeiPro.Data.Stations;
+﻿using PalettaPolizeiPro.Data;
 
 namespace PalettaPolizeiPro.Services
 {
     public interface IPLCLayer
     {
+        string IP {get;}
+        int Rack {get;}
+        int Slot {get;}
         bool IsConnected { get; }
-        void SetStation(Station station);//construcor should have the same parameter
         void SetBytes(int db, int index, int size, byte[] bytes);
         void SetBit(int db, int index, int bit, bool val);
         byte[] GetBytes(int db, int index, int size);
         bool GetBit(int db, int index, int bit);
-        bool Connect();
-        bool Disconnect();
+        void Connect();
+        void Disconnect();
     }
 }
-
-//help me please
-//i need help 
-//i want to be happy :(
-//will i ever be happy?
-// -no

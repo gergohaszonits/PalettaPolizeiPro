@@ -1,5 +1,11 @@
 ﻿@using PalettaPolizeiPro.Pages
-@inherits LayoutComponentBase
+@inherits LayoutComponentBase 
+<style>
+    .shadow
+    {
+        box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+    }
+</style>
 @if (MyClient.User is null)
 {
     return;
@@ -9,19 +15,20 @@
 <MudSnackbarProvider />
 
 <MudLayout>
-    <MudAppBar Elevation="0">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+    <MudAppBar Color="Color.Secondary" Elevation="0">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Primary" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+        <MudChip Class="shadow" Color="Color.Primary" Icon="@Icons.Material.Outlined.Person2">@MyClient.User.Username</MudChip>
         <MudSpacer />
-        <MudIconButton Icon="@Icons.Custom.Brands.MudBlazor" Color="Color.Inherit" Link="https://mudblazor.com/" Target="_blank" />
-        <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Link="https://github.com/MudBlazor/MudBlazor/" Target="_blank" />
+        <h3 style="color:lightblue"><i><b>Paletta Polizei</b></i></h3>
+        <MudIconButton Class="ml-15" OnClick="LogOut" Icon="@Icons.Material.Filled.Logout" Color="Color.Primary" Target="_blank" />
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" Elevation="1">
         <MudDrawerHeader>
-            <MudText Typo="Typo.h6">PalettaPolizeiPro</MudText>
+            <MudText Typo="Typo.h6">Vezérlőpult</MudText>
         </MudDrawerHeader>
         <NavMenu />
-    </MudDrawer>
-    <MudMainContent>
+    </MudDrawer>    
+    <MudMainContent> 
         <MudContainer MaxWidth="MaxWidth.Large" Class="my-16 pt-16">
                 @Body               
         </MudContainer>
@@ -43,5 +50,10 @@
     void DrawerToggle()
     {
         _drawerOpen = !_drawerOpen;
+    }
+    void LogOut()
+    {
+        MyClient.User = null;
+        NavManager.NavigateTo("/login");
     }
 }

@@ -12,6 +12,8 @@ namespace PalettaPolizeiPro
                 Primary = Colors.BlueGrey.Darken1,
                 Secondary = Colors.BlueGrey.Darken4,
                 Error = Colors.Purple.Darken4,
+                Dark = Colors.Grey.Darken4,
+                
             }
         };
 

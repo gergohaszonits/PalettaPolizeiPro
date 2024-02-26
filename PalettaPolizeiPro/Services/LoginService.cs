@@ -13,16 +13,20 @@ namespace PalettaPolizeiPro.Services
         public LoginService(IUserService userService)
         {
             _userService = userService;
+            Console.WriteLine("LoginService created");
         }
         public User? LogIn(UserCredentialsDTO cred)
         {
-            if (cred.Username is null || cred.Username == String.Empty || cred.Password is null || cred.Password == String.Empty)
+            if (cred is null || cred.Username is null || cred.Username == String.Empty || cred.Password is null || cred.Password == String.Empty)
             {
                 throw new Exception("A belépéshez add meg az adatokat.");
             }
-
             var user = _userService.GetUserByUsername(cred.Username);
-            if (user is null) { return null; }
+
+            if (user is null)
+            {
+                return null;
+            }
             string hash = HashString(cred.Password);
             return hash != user.Password ? null : user;
         }
@@ -44,6 +48,6 @@ namespace PalettaPolizeiPro.Services
             throw new NotImplementedException();
         }
 
-        
+
     }
 }

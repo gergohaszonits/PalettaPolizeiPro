@@ -11,7 +11,7 @@ namespace PalettaPolizeiPro.Data.Palettas
         Cancelled,
         Sorting,
     }
-    public class Order
+    public class Order : EntityObject
     {
         public User User { get; set; }
         public List<Paletta> ScheduledPalettas { get; set; }
