@@ -1,4 +1,5 @@
 ﻿using Microsoft.Identity.Client;
+using MudBlazor.Extensions;
 using PalettaPolizeiPro.Data;
 using PalettaPolizeiPro.Data.Palettas;
 using PalettaPolizeiPro.Services.PLC;
@@ -11,7 +12,7 @@ namespace PalettaPolizeiPro.Services.PalettaControl
         private PalettaControlService() { }
         private static PalettaControlService _instance = new PalettaControlService();
         public static List<IPLCLayer>? PLCs { get; set; }
-
+        private object _plcListLock = new object();
         public static void Init(List<IPLCLayer> plcs)
         {
             PLCs = plcs;
@@ -33,49 +34,71 @@ namespace PalettaPolizeiPro.Services.PalettaControl
             var plc = FindPlcFromStation(station);
             byte[] buffer = plc.GetBytes(station.DB, 0, 16);
             string identifier = GetIdentifier(buffer, station);
-
+            byte[] mokanyBytes = plc.GetBytes(station.DB, 240, 9);
+            string? engineNumber = null;
+            if (!AllZero(mokanyBytes))
+            {
+                engineNumber = S7.GetCharsAt(mokanyBytes, 0, 9);
+            }
             PalettaProperty property = new PalettaProperty
             {
-
+                Identifier = identifier,
+                ActualCycle = S7.GetIntAt(buffer, 12),
+                PredefiniedCycle = S7.GetIntAt(buffer, 14),
+                ReadTime = DateTime.Now,
+                EngineNumber = engineNumber,
             };
             return property;
-
-            /*
-                var bytes =  Client.GetBytes(station.IP, station.Rack, station.Slot, station.DB, 0, 16,10000,10000);
-                if (!HasInformation(bytes)) { return null; }
-                string identifier = GetIdentifier(bytes,station);
-                var mokanyBytes = Client.GetBytes(station.IP, station.Rack, station.Slot, station.DB, 240, 9,10000,10000);
-             */
         }
         public QueryState GetQueryState(Station station)
         {
             IPLCLayer plc = FindPlcFromStation(station);
-            byte[] bytes = plc.GetBytes(10, 10, 10);
+            byte[] bytes = plc.GetBytes(station.DB, 0, 11);
             QueryState query = new QueryState
             {
-
+                OperationStatus = bytes[0],
+                ControlFlag = bytes[1],
+                PalettaName = S7.GetCharsAt(bytes, 2, 9)
             };
             return query;
-
         }
         public void SetQueryState(QueryState state, Station station)
         {
-            throw new NotImplementedException();
+            var plc = FindPlcFromStation(station);
+            if (state.ControlFlag != null)
+            {
+                byte val = (byte)state.ControlFlag;
+                plc.SetBytes( station.DB, 1, 1, new byte[] { val });
+            }
+
+            if (state.OperationStatus != null)
+            {
+                byte val = (byte)state.OperationStatus;
+                plc.SetBytes(station.DB, 0, 1,new byte[] { val });
+            }
+            if (state.PalettaName != null)
+            {
+                throw new Exception("You cannot set the PalettaName property");
+            }
         }
 
         private void RegisterPLC(IPLCLayer plc)
         {
-            if (PLCs!.FirstOrDefault(x => x.IP == plc.IP && x.Rack == plc.Rack && x.Slot == plc.Slot) is not null)
-            { return; }
-
-            plc.Connect();
-            PLCs!.Add(plc);
+            lock (_plcListLock)
+            {
+                if (PLCs!.FirstOrDefault(x => x.IP == plc.IP && x.Rack == plc.Rack && x.Slot == plc.Slot) is not null)
+                { return; }
+                PLCs!.Add(plc);
+            }
         }
         private IPLCLayer FindPlcFromStation(Station station)
         {
-            var plc = PLCs!.FirstOrDefault(x => x.IP == station.IP && x.Rack == station.Rack && x.Slot == station.Slot);
-            if (plc is null) { throw new Exception("This PLC is not registered"); }
-            return plc;
+            lock (_plcListLock)
+            {
+                var plc = PLCs!.FirstOrDefault(x => x.IP == station.IP && x.Rack == station.Rack && x.Slot == station.Slot);
+                if (plc is null) { throw new Exception("This PLC is not registered"); }
+                return plc;
+            }
         }
         private string GetIdentifier(byte[] bytes, Station station)
         {
@@ -104,6 +127,17 @@ namespace PalettaPolizeiPro.Services.PalettaControl
             wNummer = wNummer + hex;
 
             return "L" + lNummer + "W" + wNummer;
+        }
+        private bool AllZero(byte[] buffer)
+        {
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                if (buffer[i] != 0)
+                {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }

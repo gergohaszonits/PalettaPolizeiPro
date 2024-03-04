@@ -12,8 +12,11 @@ using PalettaPolizeiPro.Services;
 using PalettaPolizeiPro.Services.PalettaControl;
 using PalettaPolizeiPro.Services.PLC;
 using PalettaPolizeiPro.Services.Simulation;
+using System.Diagnostics;
 
 
+LogService.Init(Path.Combine(Environment.CurrentDirectory, "logs.txt"));
+LogService.Log("Server started",LogLevel.Information);
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,26 +25,25 @@ StaticWebAssetsLoader.UseStaticWebAssets(builder.Environment, builder.Configurat
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddMudServices();
-string? cs = builder.Configuration.GetConnectionString("Default");
-Console.WriteLine(cs);  
+string? cs = builder.Configuration.GetConnectionString("Database");
+Console.WriteLine(cs);
 if (cs is null) { throw new Exception("Please enter a valid connection string in appsettings.json"); }
-DatabaseContext.SetConnectionString(cs);
+DatabaseContext.Initialize(cs);
 
-new DatabaseContext().Database.Migrate();
 var palettaControl = PalettaControlService.GetInstance();
 var config = new ConfigReadService();
 var stations = config.GetQueryStations();
 stations.AddRange(config.GetCheckinStations());
-List<IPLCLayer> plcs = new List<IPLCLayer>();   
+List<IPLCLayer> plcs = new List<IPLCLayer>();
 
 PalettaControlService.Init(plcs);
-builder.Services.AddScoped(typeof(IUserService),typeof(UserService));
+builder.Services.AddScoped(typeof(IUserService), typeof(UserService));
 builder.Services.AddScoped(typeof(ILoginService), typeof(LoginService));
 builder.Services.AddSingleton(typeof(IPalettaControlService), palettaControl);
 builder.Services.AddScoped(typeof(Client));
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddBlazoredLocalStorage(config => config.JsonSerializerOptions.WriteIndented = true);
-    
+
 #if RELEASE
     builder.WebHost.UseUrls("http://*:80");
 #endif

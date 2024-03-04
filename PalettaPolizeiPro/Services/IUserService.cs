@@ -11,7 +11,7 @@ namespace PalettaPolizeiPro.Services
         void UpdateUser(User user);
         Task UpdateUserAsync(User user);
         User? GetUserByUsername(string username);
-        List<User> GetUsersByAuth(Authorization auth);
+        List<User> GetUsersByAuth(Role auth);
 
         Task<User?> GetUserByUsernameAsync(string username);      
     }

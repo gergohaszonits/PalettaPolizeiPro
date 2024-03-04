@@ -7,7 +7,7 @@ namespace PalettaPolizeiPro.Database
 {
     public class DatabaseContext : DbContext
     {
-        private static string? _connectionString {  get; set; }   
+        private static string? _connectionString { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<Paletta> Palettas { get; set; }
@@ -36,7 +36,6 @@ namespace PalettaPolizeiPro.Database
                 optionsBuilder.UseSqlServer(_connectionString);
             }
         }
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Paletta>()
@@ -46,12 +45,29 @@ namespace PalettaPolizeiPro.Database
             modelBuilder.Entity<Paletta>()
             .HasMany(e => e.InFinished)
             .WithMany(e => e.FinishedPalettas);
-
-
         }
-        public static void SetConnectionString(string connectionString)
+        public static void Initialize(string connectionString)
         {
             _connectionString = connectionString;
+            using (var context = new DatabaseContext())
+            {
+                try
+                {
+                    context.Database.Migrate();
+                }
+                catch (Exception ex) { }
+                int adminCount = context.Users.Where(x => x.Role == Role.Admin).Count();
+                if (adminCount == 0)
+                {
+                    context.Users.Add(new User
+                    {
+                        Username = "sysadmin",
+                        Password = HashString("ppadmin"),
+                        Role = Role.Admin
+                    });
+                    context.SaveChanges();
+                }
+            }
         }
     }
 }

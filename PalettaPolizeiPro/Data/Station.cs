@@ -1,6 +1,6 @@
 ﻿namespace PalettaPolizeiPro.Data
 {
-    public class Station
+    public class Station : EntityObject
     {
         public required string IP { get; set; }
         public required int Rack { get; init; }

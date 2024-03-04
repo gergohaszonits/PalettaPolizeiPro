@@ -32,11 +32,11 @@ namespace PalettaPolizeiPro.Services
             }
 
         }
-        public List<User> GetUsersByAuth(Authorization auth)
+        public List<User> GetUsersByAuth(Role auth)
         {
             using (var context = new DatabaseContext())
             {
-                var users = context.Users.AsNoTracking().Where(x => x.Authorizations.Contains(auth)).ToList();
+                var users = context.Users.AsNoTracking().Where(x => x.Role == auth).ToList();
                 return users;
             }
 

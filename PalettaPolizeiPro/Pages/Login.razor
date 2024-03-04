@@ -1,17 +1,9 @@
-﻿@page "/login"
-@    using PalettaPolizeiPro.Dialogs
-@layout EmptyLayout
+﻿@using PalettaPolizeiPro.Dialogs
 
 @code {
 
     protected override void OnInitialized()
     {
-        if (MyClient.User is not null)
-        {
-            NavManager.NavigateTo("/");
-            return;
-        }
-
         TryLogin();
     }
     async void TryLogin()
@@ -43,7 +35,7 @@
             }
         }
         catch (Exception  ex){ Snackbar.Add(ex.Message,Severity.Error); }
-        NavManager.NavigateTo("/");
+       
     }
 }
 

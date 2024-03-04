@@ -6,7 +6,7 @@ using System.Text;
 
 namespace PalettaPolizeiPro.Services
 {
-    public class LoginService : DatabaseContext, ILoginService
+    public class LoginService :  ILoginService
     {
         private IUserService _userService;
 
@@ -17,6 +17,11 @@ namespace PalettaPolizeiPro.Services
         }
         public User? LogIn(UserCredentialsDTO cred)
         {
+            if (cred is null) 
+            {
+                LogService.Log("UserCredentialsDTO null értéket kapott",LogLevel.Warning);
+                return null;
+            }
             if (cred is null || cred.Username is null || cred.Username == String.Empty || cred.Password is null || cred.Password == String.Empty)
             {
                 throw new Exception("A belépéshez add meg az adatokat.");
@@ -25,23 +30,21 @@ namespace PalettaPolizeiPro.Services
 
             if (user is null)
             {
+                LogService.Log(cred.Username + " nem létező felhasználó", LogLevel.Warning);
+
                 return null;
             }
             string hash = HashString(cred.Password);
-            return hash != user.Password ? null : user;
-        }
-        private static string HashString(String value)
-        {
-            StringBuilder Sb = new StringBuilder();
-            using (SHA256 hash = SHA256.Create())
+            var u = hash != user.Password ? null : user;
+            if (u is not null)
             {
-                Byte[] result = hash.ComputeHash(Encoding.UTF8.GetBytes(value));
-                foreach (Byte b in result)
-                {
-                    Sb.Append(b.ToString("x2"));
-                }
+                LogService.Log(u.Username + " bejelentkezett", LogLevel.Information);
             }
-            return Sb.ToString();
+            else
+            {
+                LogService.Log(user.Username + " rossz jelszó", LogLevel.Warning);
+            }
+            return u;
         }
         public void LogOut(User user)
         {

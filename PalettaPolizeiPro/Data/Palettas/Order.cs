@@ -1,7 +1,4 @@
-﻿#nullable disable
-using PalettaPolizeiPro;
-
-namespace PalettaPolizeiPro.Data.Palettas
+﻿namespace PalettaPolizeiPro.Data.Palettas
 {
     public enum OrderStatus
     {
@@ -13,9 +10,10 @@ namespace PalettaPolizeiPro.Data.Palettas
     }
     public class Order : EntityObject
     {
-        public User User { get; set; }
-        public List<Paletta> ScheduledPalettas { get; set; }
-        public List<Paletta> FinishedPalettas { get; set; }
+        public required User User { get; set; }
+        public string? InfoText { get; set; }
+        public required List<Paletta> ScheduledPalettas { get; set; }
+        public required List<Paletta> FinishedPalettas { get; set; }
         public DateTime? Scheduled { get; set; }
         public DateTime? StartSort { get; set; }
         public DateTime? EndSort { get; set; }

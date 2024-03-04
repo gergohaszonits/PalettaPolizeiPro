@@ -1,19 +1,19 @@
-﻿@    using PalettaPolizeiPro.Pages
-@inherits LayoutComponentBase 
+﻿@using PalettaPolizeiPro.Dialogs
+@using PalettaPolizeiPro.Pages
+@inherits LayoutComponentBase
 <style>
-    .shadow
-    {
+    .shadow {
         box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
     }
 </style>
-@if (MyClient.User is null)
-{
-    return;
-}
-<MudThemeProvider Theme="MainTheme"/>
+
+<MudThemeProvider Theme="MainTheme" />
 <MudDialogProvider />
 <MudSnackbarProvider />
-
+@if (MyClient.User is null)
+{
+    return;    
+}
 <MudLayout>
     <MudAppBar Color="Color.Secondary" Elevation="0">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Primary" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
@@ -27,10 +27,10 @@
             <MudText Typo="Typo.h6">Vezérlőpult</MudText>
         </MudDrawerHeader>
         <NavMenu />
-    </MudDrawer>    
-    <MudMainContent> 
+    </MudDrawer>
+    <MudMainContent>
         <MudContainer MaxWidth="MaxWidth.Large" Class="my-16 pt-16">
-                @Body               
+            @Body
         </MudContainer>
     </MudMainContent>
 </MudLayout>
@@ -39,21 +39,55 @@
 
     bool _drawerOpen = true;
 
-    protected override void OnInitialized()
+    protected override Task OnAfterRenderAsync(bool firstRender)
     {
         if (MyClient.User is null)
         {
-            NavManager.NavigateTo("/login");
-        }
+            ShowLoginDialog();        }
+        return base.OnAfterRenderAsync(firstRender);
     }
-
     void DrawerToggle()
     {
         _drawerOpen = !_drawerOpen;
     }
-    void LogOut()
+    async Task LogOut()
     {
-        MyClient.User = null;
-        NavManager.NavigateTo("/login");
+        bool? result = await Dialog.ShowMessageBox(
+             "Biztosan kijelentkezel?",
+             MyClient.User!.Username,
+             yesText: "Igen", cancelText: "Nem");
+        if (result == true)
+        {
+            MyClient.User = null;
+            StateHasChanged();
+        }
+    }
+    async Task ShowLoginDialog()
+    {
+        try
+        {
+            Console.WriteLine("start show dialog");
+            var dialog = await Dialog.ShowAsync<LoginDialog>("Bejelentkezés", new DialogOptions
+                {
+                    CloseButton = false,
+                    DisableBackdropClick = true,
+                    CloseOnEscapeKey = false,
+                    FullScreen = false,
+                });
+            var result = await dialog.Result;
+            UserCredentialsDTO cred = (UserCredentialsDTO)result.Data;
+            var user = LoginService.LogIn(cred);
+            if (user is null)
+            {
+                Snackbar.Add("Sikertelen bejelentkezés");
+            }
+            else
+            {
+                Snackbar.Add($"Üdvözöljük {user.Username}");
+                MyClient.User = user;
+            }
+        }
+        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
+        await InvokeAsync(StateHasChanged);
     }
 }

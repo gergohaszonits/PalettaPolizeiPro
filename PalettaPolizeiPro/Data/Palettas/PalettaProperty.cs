@@ -4,10 +4,10 @@ namespace PalettaPolizeiPro.Data.Palettas
 {
     public class PalettaProperty : EntityObject
     {
-        public string Identifier { get; set; }
+        public required string Identifier { get; set; }
         public int PredefiniedCycle { get; set; }
         public int ActualCycle { get; set; }
-        public string EngineNumber { get; set; }
+        public string? EngineNumber { get; set; }
         public DateTime ReadTime { get; set; }
 
         [NotMapped]

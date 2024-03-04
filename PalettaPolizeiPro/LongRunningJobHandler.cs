@@ -6,11 +6,12 @@ namespace PalettaPolizeiPro
     {
         private List<IUpdatable> _updatables { get; set; }
         private int _threadSleep = 0; 
+        Thread? _mainThread;
         public LongRunningJobHandler(List<IUpdatable> updatables,int threadsleep)
         {
             _updatables = updatables; 
         }
-        Thread _mainThread;
+     
         public void Start()
         {
             _mainThread = new Thread(Run);
@@ -31,4 +32,4 @@ namespace PalettaPolizeiPro
             }
         }
     }
-}
+}   
