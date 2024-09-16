@@ -11,14 +11,15 @@ namespace PalettaPolizeiPro
             {
                 Primary = Colors.BlueGrey.Darken1,
                 Secondary = Colors.BlueGrey.Darken4,
-                Error = Colors.Purple.Darken4,
-                Dark = Colors.Grey.Darken4,
-                
+                Error = Colors.Red.Darken1,
+                Dark = Colors.Grey.Darken4,                
             }
         };
 
         public static bool ProgramRunning = true;
         public static readonly bool SIMULATION = true;
+        public static bool DEBUG = true;
+
 
         public static readonly int PALETTA_CHECK_DATABLOCK_INDEX = 0;
         public static readonly int PALETTA_CHECK_DATABLOCK_SIZE = 16;

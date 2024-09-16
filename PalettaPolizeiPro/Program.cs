@@ -17,6 +17,9 @@ using PalettaPolizeiPro.Services.Stations;
 using PalettaPolizeiPro.Services.Users;
 using System.Diagnostics;
 
+#if DEBUG
+DEBUG = true;
+#endif
 
 LogService.Init(Path.Combine(Environment.CurrentDirectory, "Logs"));
 LogService.Log("Server started", LogLevel.Information);
@@ -77,7 +80,7 @@ app.UseRouting();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
-var jobs = new LongRunningJobHandler(new List<IUpdatable> { new PalettaControlProcess((PalettaControlService)palettaControl) },100);
+var jobs = new LongRunningJobHandler(new List<IUpdatable> { new PalettaControlProcess((PalettaControlService)palettaControl) }, 100);
 
 jobs.Start();
 app.Run();

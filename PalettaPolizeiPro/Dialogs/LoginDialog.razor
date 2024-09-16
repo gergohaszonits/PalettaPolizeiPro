@@ -27,10 +27,11 @@
     protected override void OnInitialized()
     {
         //EZT MAJD TÖRÖLNI
-        if (SIMULATION)
+        if (DEBUG)
         {
-            
-
+            _username = "sysadmin";
+            _password = "ppadmin";
+            Snackbar.Add("DEBUG MODE (AUTO FILL)");
         }
     }
 

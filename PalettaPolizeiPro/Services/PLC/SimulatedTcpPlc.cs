@@ -18,7 +18,7 @@ namespace PalettaPolizeiPro.Services.PLC
         public int Rack { get; set; }
         public int Slot { get; set; }
 
-        bool IPLCLayer.IsConnected => _IsConnected;
+        public bool IsConnected => _IsConnected;
 
         public bool _IsConnected = false;
         public SimulatedTcpPlc(string iP, int rack, int slot)

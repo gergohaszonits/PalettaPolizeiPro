@@ -1,15 +1,46 @@
 ﻿@page "/stations"
 @using PalettaPolizeiPro.Data.Stations
 @using PalettaPolizeiPro.Dialogs
+@using PalettaPolizeiPro.Services.PLC
 <MudPaper Elevation="25">
     <MudToolBar>
         <MudIconButton OnClick="AddClicked" Icon="@Icons.Material.Outlined.Add" />
+        <MudIconButton Icon="@Icons.Material.Filled.Expand" />
+        <MudIconButton Icon="@Icons.Material.Filled.Compress" />
+
         <MudIconButton Style="margin-left:30px" Color="Color.Error" Icon="@Icons.Material.Filled.HighlightOff" />
         <MudIconButton Color="Color.Success" Icon="@Icons.Material.Filled.Check" />
         <MudSpacer />
         <MudIconButton Icon="@Icons.Material.Outlined.Timeline" Color="Color.Inherit" />
         <MudText Typo="Typo.caption">120 ms</MudText>
     </MudToolBar>
+    <MudExpansionPanels MultiExpansion="true">
+        @{int i = 0;}
+        @foreach (var group in _groups)
+        {
+
+            <MudExpansionPanel IsExpanded="@expansions[i]"  Class="">
+                <TitleContent>
+                    <div class="d-flex">
+                        <MudIcon Color="(group.Plc.IsConnected ? Color.Primary : Color.Error)" Size="MudBlazor.Size.Medium" Icon="@GetConnectionIcon(group)" class="mr-3"></MudIcon>
+                        <MudText><strong>@group.Plc.IP</strong></MudText>
+                    </div>
+                </TitleContent>
+                <ChildContent>
+                    @if (group.Plc.IsConnected)
+                    {
+                        <MudButton OnClick="()=>DisconnectClicked(group.Plc)" Variant="Variant.Outlined" Color="Color.Error" EndIcon="@Icons.Material.Rounded.ExitToApp">Kapcsolat bontása</MudButton>
+                    }
+                    else
+                    {
+                        <MudButton OnClick="()=>ConnectClicked(group.Plc)" Variant="Variant.Outlined" Color="Color.Success" EndIcon="@Icons.Material.Rounded.Check">Csatlakozás</MudButton>
+
+                    }
+                </ChildContent>
+            </MudExpansionPanel>
+            i++;
+        }
+    </MudExpansionPanels>
 </MudPaper>
 
 @code {
@@ -23,12 +54,36 @@
     * Állomás előzmények exportálás csv be vagy xlsx
     * Kapcsolati problémák logolása és megjelenítése állomásokrta lebontva
     * Kimaradások és csatlakozási hosszak megjelenítése
-       */
+    */
     List<PlcStationGroups> _groups { get; set; }
+    bool[] expansions;
+
+
 
     protected override void OnInitialized()
     {
+        Load();
+    }
+    private void Load()
+    {
         _groups = PalettaControl.GetPlcStationGroups();
+        expansions = new bool[_groups.Count];
+    }
+    private void ExpandAll()
+    {
+        for(int i = 0; i< expansions.Length;i++)
+        {
+            expansions[i] = true;
+        }
+        InvokeAsync(StateHasChanged);
+    }
+    private void CollapseAll()
+    {
+        for (int i = 0; i < expansions.Length; i++)
+        {
+            expansions[i] = false;
+        }
+        InvokeAsync(StateHasChanged);
     }
     private async Task AddClicked()
     {
@@ -36,7 +91,7 @@
             {
                 CloseButton = true,
                 CloseOnEscapeKey = true,
-            }); 
+            });
         var result = await dialog.Result;
         Station? st = (Station?)result.Data;
         if (st is null) { return; }
@@ -51,6 +106,39 @@
         {
             LogService.LogException(ex);
             Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+    private string GetConnectionIcon(PlcStationGroups group)
+    {
+        if (group.Plc.IsConnected)
+        {
+
+            return Icons.Material.Filled.Polyline;
+        }
+        return Icons.Material.Filled.ErrorOutline;
+    }
+    void DisconnectClicked(IPLCLayer plc)
+    {
+        try
+        {
+            plc.Disconnect();
+            InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            LogService.LogException(ex);
+        }
+    }
+    void ConnectClicked(IPLCLayer plc)
+    {
+        try
+        {
+            plc.Connect();
+            InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            LogService.LogException(ex);
         }
     }
 }
