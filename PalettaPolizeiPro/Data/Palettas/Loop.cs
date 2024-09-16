@@ -1,4 +1,6 @@
-﻿namespace PalettaPolizeiPro.Data.Palettas
+﻿using PalettaPolizeiPro.Data.Stations;
+
+namespace PalettaPolizeiPro.Data.Palettas
 {
     public class Loop
     {

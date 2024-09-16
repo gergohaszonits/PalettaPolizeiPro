@@ -1,4 +1,6 @@
-﻿namespace PalettaPolizeiPro.Data.Palettas
+﻿using PalettaPolizeiPro.Data.Users;
+
+namespace PalettaPolizeiPro.Data.Palettas
 {
     public enum OrderStatus
     {
@@ -14,9 +16,10 @@
         public string? InfoText { get; set; }
         public required List<Paletta> ScheduledPalettas { get; set; }
         public required List<Paletta> FinishedPalettas { get; set; }
-        public DateTime? Scheduled { get; set; }
-        public DateTime? StartSort { get; set; }
-        public DateTime? EndSort { get; set; }
+        public DateTime? ScheduledTime { get; set; }
+        public DateTime? FinishedTime { get; set; }
+        public DateTime? StartSortTime { get; set; }
+        public DateTime? EndSortTime { get; set; }
         public long MaximumSort { get; set; }
         public OrderStatus Status { get; set; }
     }

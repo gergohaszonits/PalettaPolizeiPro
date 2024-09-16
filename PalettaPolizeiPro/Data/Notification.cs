@@ -1,4 +1,5 @@
 ﻿using PalettaPolizeiPro.Data.Palettas;
+using PalettaPolizeiPro.Data.Users;
 
 namespace PalettaPolizeiPro.Data
 {

@@ -1,38 +1,66 @@
-﻿using Microsoft.Identity.Client;
+﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Identity.Client;
 using MudBlazor.Extensions;
 using PalettaPolizeiPro.Data;
 using PalettaPolizeiPro.Data.Palettas;
+using PalettaPolizeiPro.Data.Stations;
 using PalettaPolizeiPro.Services.PLC;
+using PalettaPolizeiPro.Services.Stations;
 using Sharp7;
+using System.Collections.Concurrent;
 
 namespace PalettaPolizeiPro.Services.PalettaControl
 {
     public class PalettaControlService : IPalettaControlService
     {
-        private PalettaControlService() { }
-        private static PalettaControlService _instance = new PalettaControlService();
-        public static List<IPLCLayer>? PLCs { get; set; }
-        private object _plcListLock = new object();
-        public static void Init(List<IPLCLayer> plcs)
+        private PalettaControlService()
         {
-            PLCs = plcs;
-            _instance.ConnectAll();
-        }
-        private void ConnectAll()
-        {
-            PLCs!.ForEach((x) =>
+            _stationsService.OnStationChange += (s, a) =>
             {
-                x.Connect();
-            });
+                if (a.State == ChangeState.Added)
+                {
+                    OnAdd(a.Station);
+                }
+                else if (a.State == ChangeState.Modified)
+                {
+                    OnModify(a.Station);
+                }
+                else if (a.State == ChangeState.Removed)
+                {
+                    OnRemove(a.Station);
+                }
+            };
         }
+
+        private static PalettaControlService _instance = new PalettaControlService();
+        private ConcurrentDictionary<string, IPLCLayer> _plcs = new ConcurrentDictionary<string, IPLCLayer>();
+        private List<Station> _stations = new List<Station>();
+        private StationService _stationsService = StationService.GetInstance();
+        private object _locker = new object();
+
         public static IPalettaControlService GetInstance()
         {
             return _instance;
         }
-        public PalettaProperty GetProperty(Station station)
+        public void Init(List<Station> stations)
+        {
+            foreach (var station in stations)
+            {
+                try
+                {
+                    AttachStation(station);
+                }
+                catch (Exception ex){ LogService.LogException(ex); }
+            }
+        }
+        public PalettaProperty? GetProperty(Station station)
         {
             var plc = FindPlcFromStation(station);
             byte[] buffer = plc.GetBytes(station.DB, 0, 16);
+            if (AllZero(buffer))
+            { 
+                return null;
+            }
             string identifier = GetIdentifier(buffer, station);
             byte[] mokanyBytes = plc.GetBytes(station.DB, 240, 9);
             string? engineNumber = null;
@@ -68,13 +96,13 @@ namespace PalettaPolizeiPro.Services.PalettaControl
             if (state.ControlFlag != null)
             {
                 byte val = (byte)state.ControlFlag;
-                plc.SetBytes( station.DB, 1, 1, new byte[] { val });
+                plc.SetBytes(station.DB, 1, 1, new byte[] { val });
             }
 
             if (state.OperationStatus != null)
             {
                 byte val = (byte)state.OperationStatus;
-                plc.SetBytes(station.DB, 0, 1,new byte[] { val });
+                plc.SetBytes(station.DB, 0, 1, new byte[] { val });
             }
             if (state.PalettaName != null)
             {
@@ -82,23 +110,60 @@ namespace PalettaPolizeiPro.Services.PalettaControl
             }
         }
 
-        private void RegisterPLC(IPLCLayer plc)
+        private void AttachStation(Station station)
         {
-            lock (_plcListLock)
+            string key = station.IP + station.Rack + station.Slot;
+            IPLCLayer? plc;
+            lock (_locker)
             {
-                if (PLCs!.FirstOrDefault(x => x.IP == plc.IP && x.Rack == plc.Rack && x.Slot == plc.Slot) is not null)
-                { return; }
-                PLCs!.Add(plc);
+                if (!_plcs.TryGetValue(key, out plc))
+                {
+                    if (SIMULATION)
+                    {
+                        plc = new SimulatedTcpPlc(station.IP, station.Rack, station.Slot);
+                    }
+                    else
+                    {
+                        plc = new S7PLC(station.IP, station.Rack, station.Slot);
+                    }
+
+                    _plcs.TryAdd(key, plc);
+                }
+                _stations.Add(station);
+                plc.Connect();
             }
         }
-        private IPLCLayer FindPlcFromStation(Station station)
+        private void DeattachStation(Station station)
         {
-            lock (_plcListLock)
+            string key = station.IP + station.Rack + station.Slot;
+            lock (_locker)
             {
-                var plc = PLCs!.FirstOrDefault(x => x.IP == station.IP && x.Rack == station.Rack && x.Slot == station.Slot);
-                if (plc is null) { throw new Exception("This PLC is not registered"); }
-                return plc;
+                IPLCLayer? plc;
+                var stations = _stations.Where(x => x.Rack == station.Rack && x.IP == station.IP && x.Rack == station.Rack).ToList();
+                if (stations.Count == 1)
+                {
+                    if (_plcs.TryGetValue(key, out plc))
+                    {
+                        try
+                        {
+                            plc.Disconnect();
+                        }
+                        catch (Exception ex) { LogService.LogException(ex); }
+                    }
+                }
+                _stations.Remove(station);
+                _plcs.Remove(key, out plc);
             }
+        }
+        private IPLCLayer? FindPlcFromStation(Station station)
+        {
+            string key = station.IP + station.Rack + station.Slot;
+            IPLCLayer? plc;
+            if (!_plcs.TryGetValue(key, out plc))
+            {
+                return null;
+            }
+            return plc;
         }
         private string GetIdentifier(byte[] bytes, Station station)
         {
@@ -115,7 +180,7 @@ namespace PalettaPolizeiPro.Services.PalettaControl
 
             for (int i = 0; i < 2; i++)
             {
-                byte[] temp = new byte[1] { bytes.GetByteAt(0 + i) };
+                byte[] temp = [ bytes.GetByteAt(0 + i) ];
                 hex += BitConverter.ToString(temp);
             }
 
@@ -128,16 +193,59 @@ namespace PalettaPolizeiPro.Services.PalettaControl
 
             return "L" + lNummer + "W" + wNummer;
         }
-        private bool AllZero(byte[] buffer)
+      
+        private void OnAdd(Station station)
         {
-            for (int i = 0; i < buffer.Length; i++)
+            AttachStation(station);
+        }
+        private void OnRemove(Station station)
+        {
+            DeattachStation(station);
+        }
+        private void OnModify(Station station)
+        {
+            lock (_locker)
             {
-                if (buffer[i] != 0)
+                var st = _stations.FirstOrDefault(x => x.Id == station.Id);
+                st = station;
+            }
+        }
+
+        public List<IPLCLayer> GetPlcs()
+        {
+            return _plcs.Values.ToList();
+        }
+
+        public List<PlcStationGroups> GetPlcStationGroups()
+        {
+            var groups = new List<PlcStationGroups>();
+            foreach (var station in _stations)
+            {
+                var plc = FindPlcFromStation(station);
+                if (plc is null)
                 {
-                    return false;
+                    continue;
+                }
+                var item = groups.FirstOrDefault(x => x.Plc.IP == plc.IP && x.Plc.Rack == plc.Rack && x.Plc.Slot == plc.Slot);
+                if (item is null)
+                {
+                    List<Station> sts = [station];
+                    groups.Add(new PlcStationGroups
+                    {
+                        Plc = plc,
+                        Stations = sts
+                    });
+                }
+                else
+                {
+                    if (item.Stations is null)
+                    {
+                        item.Stations = new List<Station>();
+                    }
+                    item.Stations.Add(station);
                 }
             }
-            return true;
+            return groups;
         }
     }
 }

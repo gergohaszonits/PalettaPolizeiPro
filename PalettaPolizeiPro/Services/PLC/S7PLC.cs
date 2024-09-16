@@ -44,7 +44,7 @@ namespace PalettaPolizeiPro.Services.PLC
             bool val = false;
             byte[] b = new byte[1];
             lock (_client)
-            {
+            {   
                 int error = 0;
                 error = _client.ReadArea(S7Area.DB, db, index * 8 + bit, 1, S7WordLength.Bit, b);
                 if (error != 0)

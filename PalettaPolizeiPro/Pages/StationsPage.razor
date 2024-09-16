@@ -1,20 +1,56 @@
 ﻿@page "/stations"
-
+@using PalettaPolizeiPro.Data.Stations
+@using PalettaPolizeiPro.Dialogs
+<MudPaper Elevation="25">
+    <MudToolBar>
+        <MudIconButton OnClick="AddClicked" Icon="@Icons.Material.Outlined.Add" />
+        <MudIconButton Style="margin-left:30px" Color="Color.Error" Icon="@Icons.Material.Filled.HighlightOff" />
+        <MudIconButton Color="Color.Success" Icon="@Icons.Material.Filled.Check" />
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Outlined.Timeline" Color="Color.Inherit" />
+        <MudText Typo="Typo.caption">120 ms</MudText>
+    </MudToolBar>
+</MudPaper>
 
 @code {
 
     /*
-     * Ezen a felületen lehet hozzáadni/eltávolítani Check/Query állomásokat
-     * Ki be kapcsolni ezeket az állomésokat
-     * Előzményeit visszanézni állomásokra lebontva
-     * Kapcsolat állapota csatlakoztatva/megszakadt
-     * Kapcsolat sebessége állomásokra lebontva
-     * Állomás előzmények exportálás csv be vagy xlsx 
-     * Kapcsolati problémák logolása és megjelenítése állomásokrta lebontva
-     * Kimaradások és csatlakozási hosszak megjelenítése
-     */
+    * Ezen a felületen lehet hozzáadni/eltávolítani Check/Query állomásokat
+    * Ki be kapcsolni ezeket az állomésokat
+    * Előzményeit visszanézni állomásokra lebontva
+    * Kapcsolat állapota csatlakoztatva/megszakadt
+    * Kapcsolat sebessége állomásokra lebontva
+    * Állomás előzmények exportálás csv be vagy xlsx
+    * Kapcsolati problémák logolása és megjelenítése állomásokrta lebontva
+    * Kimaradások és csatlakozási hosszak megjelenítése
+       */
+    List<PlcStationGroups> _groups { get; set; }
 
     protected override void OnInitialized()
     {
+        _groups = PalettaControl.GetPlcStationGroups();
+    }
+    private async Task AddClicked()
+    {
+        var dialog = await Dialog.ShowAsync<StationEditor>("Állomás hozzáadása", new DialogOptions
+            {
+                CloseButton = true,
+                CloseOnEscapeKey = true,
+            }); 
+        var result = await dialog.Result;
+        Station? st = (Station?)result.Data;
+        if (st is null) { return; }
+        try
+        {
+            StationService.AddStation(st);
+            Snackbar.Add("Állomás hozzáadva", Severity.Info);
+            _groups = PalettaControl.GetPlcStationGroups();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            LogService.LogException(ex);
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
     }
 }

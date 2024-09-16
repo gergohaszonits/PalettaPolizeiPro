@@ -19,5 +19,16 @@ namespace PalettaPolizeiPro
             }
             return Sb.ToString();
         }
+        public static bool AllZero(byte[] buffer)
+        {
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                if (buffer[i] != 0)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
     }
 }

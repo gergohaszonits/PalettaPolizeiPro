@@ -2,6 +2,8 @@
 using MudBlazor;
 using PalettaPolizeiPro.Data;
 using PalettaPolizeiPro.Data.Palettas;
+using PalettaPolizeiPro.Data.Stations;
+using PalettaPolizeiPro.Data.Users;
 
 namespace PalettaPolizeiPro.Database
 {
@@ -12,12 +14,12 @@ namespace PalettaPolizeiPro.Database
         public DbSet<Order> Orders { get; set; }
         public DbSet<Paletta> Palettas { get; set; }
         public DbSet<PalettaProperty> PalettaProperties { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
         public DbSet<QueryNotification> QueryNotifications { get; set; }
         public DbSet<PalettaNotification> PalettaNotifications { get; set; }
         public DbSet<UserNotification> UserNotifications { get; set; }
-        public DbSet<Station> QueryStations { get; set; }
-        public DbSet<Station> CheckStations { get; set; }
-
+        public DbSet<Station> Stations { get; set; }
+        public DbSet<QueryState> QueryEvents { get; set; }
 
 
         public DatabaseContext() : base()

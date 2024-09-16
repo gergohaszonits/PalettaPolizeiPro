@@ -9,8 +9,11 @@
 @using MudBlazor
 @using PalettaPolizeiPro
 @using PalettaPolizeiPro.Data
+@using PalettaPolizeiPro.Data.Users
 @using PalettaPolizeiPro.Services
 @using PalettaPolizeiPro.Services.PalettaControl
+@using PalettaPolizeiPro.Services.Stations
+@using PalettaPolizeiPro.Services.Users
 @using PalettaPolizeiPro.Shared
 @using PalettaPolizeiPro.Data.DataTransferObjects
 @using PalettaPolizeiPro.Database
@@ -25,4 +28,5 @@
 @inject Client MyClient
 @inject IUserService UserService
 @inject ILoginService LoginService
+@inject IStationService StationService
 @inject IPalettaControlService PalettaControl

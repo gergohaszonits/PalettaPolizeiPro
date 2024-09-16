@@ -10,6 +10,7 @@ namespace PalettaPolizeiPro
         public LongRunningJobHandler(List<IUpdatable> updatables,int threadsleep)
         {
             _updatables = updatables; 
+            _threadSleep = threadsleep;
         }
      
         public void Start()

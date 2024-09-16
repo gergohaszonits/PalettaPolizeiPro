@@ -3,7 +3,7 @@
 @inherits LayoutComponentBase
 <style>
     .shadow {
-        box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+        box-shadow: rgba(0, 0, 0, 0.3) 0px 19px 38px, rgba(0, 0, 0, 0.22) 0px 15px 12px;
     }
 </style>
 
@@ -29,7 +29,7 @@
         <NavMenu />
     </MudDrawer>
     <MudMainContent>
-        <MudContainer MaxWidth="MaxWidth.Large" Class="my-16 pt-16">
+        <MudContainer MaxWidth="MaxWidth.Large" Class="my-4 pt-4">
             @Body
         </MudContainer>
     </MudMainContent>
@@ -43,7 +43,8 @@
     {
         if (MyClient.User is null)
         {
-            ShowLoginDialog();        }
+            ShowLoginDialog();
+        }
         return base.OnAfterRenderAsync(firstRender);
     }
     void DrawerToggle()
@@ -66,7 +67,6 @@
     {
         try
         {
-            Console.WriteLine("start show dialog");
             var dialog = await Dialog.ShowAsync<LoginDialog>("Bejelentkezés", new DialogOptions
                 {
                     CloseButton = false,
