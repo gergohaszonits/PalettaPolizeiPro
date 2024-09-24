@@ -6,6 +6,7 @@ namespace PalettaPolizeiPro.Data.Users
     public class Client
     {
         private Guid Guid = Guid.NewGuid();
+        public string? Ip { get; set; }
         public ClientSessionMemory SessionMemory { get; set; } = new ClientSessionMemory();
         public Client()
         {

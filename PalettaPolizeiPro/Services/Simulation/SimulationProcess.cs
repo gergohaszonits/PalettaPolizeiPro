@@ -13,7 +13,7 @@ namespace PalettaPolizeiPro.Services.Simulation
         {
             Loops = loops;
         }
-        public void Update()
+        public async Task Update()
         {
             //implement logic
         }

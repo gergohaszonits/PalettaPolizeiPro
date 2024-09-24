@@ -1,0 +1,140 @@
+﻿@using Microsoft.AspNetCore.Mvc
+@using PalettaPolizeiPro.Data.Events
+@using PalettaPolizeiPro.Data.Stations
+@using System.Text
+@implements IDisposable
+<style>
+    .data_row {
+        max-width: 150px;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    @@keyframes glow {
+        0% {
+            background-color: rgba(0, 100, 255, 0);
+        }
+
+        50% {
+            background-color: rgba(0, 100, 255, 1);
+        }
+
+        100% {
+            background-color: rgba(0, 100, 255, 0);
+        }
+    }
+
+    .glow {
+        animation: glow 0.5s;
+    }
+</style>
+<MudTable Items="@_values" Filter="new Func<QueryEventArgs,bool>(FilterFunc)" Dense="true" Hover="true" Bordered="true" Striped="true">
+    <ToolBarContent>
+        <MudIconButton OnClick="ExportToCSV" Icon="@Icons.Material.Rounded.Download"></MudIconButton>
+        <MudSpacer />
+        <MudTextField @bind-Value="searchString" Placeholder="Paletta keresés" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="MudBlazor.Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Azonosító</MudTh>
+        <MudTh>Paletta</MudTh>
+        <MudTh>Utasítás</MudTh>
+        <MudTh>Idő</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        @if (_values.First().Id == context.Id && _animationAllowed)
+        {
+            _animationAllowed = false;
+            <MudTd Class="data_row glow" DataLabel="Azonosító">@context.Id</MudTd>
+            <MudTd Class="data_row glow" DataLabel="Paletta">@context.State.PalettaName</MudTd>
+            <MudTd Class="data_row glow" DataLabel="Utasítás">@(context.State.ControlFlag == 2 ? "Tovább" : "Kisorol")</MudTd>
+            <MudTd Class="data_row glow" DataLabel="Idő">@context.Time</MudTd>
+        }
+        else
+        {
+            <MudTd Class="data_row" DataLabel="Azonosító">@context.Id</MudTd>
+            <MudTd Class="data_row" DataLabel="Paletta">@context.State.PalettaName</MudTd>
+            <MudTd Class="data_row" DataLabel="Utasítás">@(context.State.ControlFlag == 2 ? "Tovább" : "Kisorol")</MudTd>
+            <MudTd Class="data_row" DataLabel="Idő">@context.Time</MudTd>
+        }
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+    <PagerContent>
+        <MudTablePager HideRowsPerPage="true" />
+    </PagerContent>
+</MudTable>
+
+
+@code {
+
+    [Parameter] public required Station Station { get; set; }
+    private List<QueryEventArgs> _values;
+
+    private int _step;
+    private readonly int _amount = 10;
+    private string searchString = "";
+
+    private bool _animationAllowed;
+
+    protected override void OnInitialized()
+    {
+        EventService.QueryEvent += OnValueChange;
+        Load();
+    }
+
+    void IDisposable.Dispose()
+    {
+        EventService.QueryEvent -= OnValueChange;
+    }
+
+    private void OnValueChange(object? sender, QueryEventArgs args)
+    {
+        if (args.StationId != Station.Id) { return; }
+
+        _values.Insert(0, args);
+        _animationAllowed = true;
+
+        InvokeAsync(StateHasChanged);
+    }
+
+
+    private void Load()
+    {
+        _values = EventService.GetQueryEvents(x => x.StationId == Station.Id);
+        InvokeAsync(StateHasChanged);
+    }
+
+    private bool FilterFunc(QueryEventArgs element) => FilterFunc(element, searchString);
+
+    private bool FilterFunc(QueryEventArgs element, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.State.PalettaName is not null && element.State is not null && element.State.PalettaName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+    private byte[] CreateCSVFromList(List<QueryEventArgs> values)
+    {
+        var sb = new StringBuilder();
+
+        // Add CSV header
+        sb.AppendLine("Azonosító;Paletta;Utasítás;Idő");
+
+        // Add CSV rows
+        foreach (var item in values)
+        {
+            sb.AppendLine($"{item.Id};{item.State.PalettaName};{(item.State.ControlFlag == 2 ? "Tovább" : "Kisorol")};{item.Time}");
+        }
+
+        return Encoding.Unicode.GetBytes(sb.ToString());
+    }
+    private async Task ExportToCSV()
+    {
+        var csvData = CreateCSVFromList(_values);
+        var fileName = $"{Station.Name}.csv";
+        await JS.InvokeVoidAsync("BlazorDownloadFile", fileName, "text/csv", csvData);
+    }
+
+}

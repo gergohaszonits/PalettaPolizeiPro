@@ -40,7 +40,7 @@ namespace PalettaPolizeiPro.Services.Stations
         {
             using (var context = new DatabaseContext())
             {
-                return context.Stations.ToList();
+                return context.Stations.OrderBy(x => x.Name).ToList();
             }
         }
 
@@ -48,12 +48,13 @@ namespace PalettaPolizeiPro.Services.Stations
         {
             using (var context = new DatabaseContext())
             {
-                return context.Stations.Where(predicate).ToList();
+                return context.Stations.OrderBy(x=>x.Name).Where(predicate).ToList();
             }
         }
 
         public void ModifyStation(Station station)
         {
+            Console.WriteLine(station.Id);
             using (var context = new DatabaseContext())
             {
                 context.Entry(station).State = EntityState.Modified;

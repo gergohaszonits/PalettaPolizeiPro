@@ -1,4 +1,5 @@
 ﻿using PalettaPolizeiPro.Services;
+using PalettaPolizeiPro.Data.EKS;
 
 namespace PalettaPolizeiPro.Data.Users
 {
@@ -8,6 +9,7 @@ namespace PalettaPolizeiPro.Data.Users
         public required string Password { get; set; }
         public string? WorkerID { get; set; }
         public required Role Role { get; set; }
+        public Eks? Eks { get; set; }
 
     }
 }

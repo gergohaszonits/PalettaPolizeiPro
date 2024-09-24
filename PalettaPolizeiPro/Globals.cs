@@ -7,12 +7,12 @@ namespace PalettaPolizeiPro
         
         public static MudTheme MainTheme = new MudTheme
         {
-            Palette = new Palette
+            PaletteLight = new PaletteLight
             {
-                Primary = Colors.BlueGrey.Darken1,
-                Secondary = Colors.BlueGrey.Darken4,
+                Primary = Colors.BlueGray.Darken1,
+                Secondary = Colors.BlueGray.Darken4,
                 Error = Colors.Red.Darken1,
-                Dark = Colors.Grey.Darken4,                
+                Dark = Colors.Gray.Darken4,                
             }
         };
 

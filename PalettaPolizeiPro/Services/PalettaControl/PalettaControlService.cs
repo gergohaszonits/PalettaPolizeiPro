@@ -8,6 +8,7 @@ using PalettaPolizeiPro.Services.PLC;
 using PalettaPolizeiPro.Services.Stations;
 using Sharp7;
 using System.Collections.Concurrent;
+using static System.Collections.Specialized.BitVector32;
 
 namespace PalettaPolizeiPro.Services.PalettaControl
 {
@@ -38,6 +39,10 @@ namespace PalettaPolizeiPro.Services.PalettaControl
         private StationService _stationsService = StationService.GetInstance();
         private object _locker = new object();
 
+        private Dictionary<Station, QueryState?> QueryCache = new Dictionary<Station, QueryState?>();
+        private Dictionary<Station, PalettaProperty?> PropertyCache = new Dictionary<Station, PalettaProperty?>();
+
+
         public static IPalettaControlService GetInstance()
         {
             return _instance;
@@ -50,15 +55,20 @@ namespace PalettaPolizeiPro.Services.PalettaControl
                 {
                     AttachStation(station);
                 }
-                catch (Exception ex){ LogService.LogException(ex); }
+                catch (Exception ex) { LogService.LogException(ex); }
             }
         }
         public PalettaProperty? GetProperty(Station station)
         {
             var plc = FindPlcFromStation(station);
+            if (!plc.IsConnected)
+            {
+                return null;
+            }
             byte[] buffer = plc.GetBytes(station.DB, 0, 16);
             if (AllZero(buffer))
-            { 
+            {
+                PropertyCache[station] = null;
                 return null;
             }
             string identifier = GetIdentifier(buffer, station);
@@ -76,43 +86,69 @@ namespace PalettaPolizeiPro.Services.PalettaControl
                 ReadTime = DateTime.Now,
                 EngineNumber = engineNumber,
             };
+            PropertyCache[station] = property;
             return property;
         }
-        public QueryState GetQueryState(Station station)
+        public QueryState? GetQueryState(Station station)
         {
             IPLCLayer plc = FindPlcFromStation(station);
+            if (!plc.IsConnected)
+            {
+                QueryCache[station] = null;
+                return null;
+            }
             byte[] bytes = plc.GetBytes(station.DB, 0, 11);
+
+
+            bool fullZero = true;
+            for (int i = 2; i < 11; i++)
+            {
+                if (bytes[i] != 0)
+                {
+                    fullZero = false;
+                    break;
+                }
+            }
+
             QueryState query = new QueryState
             {
                 OperationStatus = bytes[0],
                 ControlFlag = bytes[1],
-                PalettaName = S7.GetCharsAt(bytes, 2, 9)
+                PalettaName = fullZero ? null : S7.GetCharsAt(bytes, 2, 9)
             };
+
+            QueryCache[station] = query;
+          
             return query;
         }
-        public void SetQueryState(QueryState state, Station station)
+        public void PalettaGo(Station station)
         {
             var plc = FindPlcFromStation(station);
-            if (state.ControlFlag != null)
-            {
-                byte val = (byte)state.ControlFlag;
-                plc.SetBytes(station.DB, 1, 1, new byte[] { val });
-            }
-
-            if (state.OperationStatus != null)
-            {
-                byte val = (byte)state.OperationStatus;
-                plc.SetBytes(station.DB, 0, 1, new byte[] { val });
-            }
-            if (state.PalettaName != null)
-            {
-                throw new Exception("You cannot set the PalettaName property");
-            }
+            if (plc is null) { return; }
+            plc.SetBytes(station.DB, 1, 1, [2]);
+        }
+        public void PalettaOut(Station station)
+        {
+            var plc = FindPlcFromStation(station);
+            if (plc is null) { return; }
+            plc.SetBytes(station.DB, 1, 1, [4]);
+        }
+        public void OperationStatusOff(Station station)
+        {
+            var plc = FindPlcFromStation(station);
+            if (plc is null) { return; }
+            plc.SetBytes(station.DB, 0, 1, [0]);
         }
 
+        public void OperationStatusOn(Station station)
+        {
+            var plc = FindPlcFromStation(station);
+            if (plc is null) { return; }
+            plc.SetBytes(station.DB, 0, 1, [255]);
+        }
         private void AttachStation(Station station)
         {
-            string key = station.IP + station.Rack + station.Slot;
+            string key = station.Ip + station.Rack + station.Slot;
             IPLCLayer? plc;
             lock (_locker)
             {
@@ -120,26 +156,34 @@ namespace PalettaPolizeiPro.Services.PalettaControl
                 {
                     if (SIMULATION)
                     {
-                        plc = new SimulatedTcpPlc(station.IP, station.Rack, station.Slot);
+                        plc = new SimulatedTcpPlc(station.Ip, station.Rack, station.Slot);
                     }
                     else
                     {
-                        plc = new S7PLC(station.IP, station.Rack, station.Slot);
+                        plc = new S7PLC(station.Ip, station.Rack, station.Slot);
                     }
 
                     _plcs.TryAdd(key, plc);
                 }
                 _stations.Add(station);
                 plc.Connect();
+                if (station.StationType == StationType.Query)
+                {
+                    GetQueryState(station);
+                }
+                else if (station.StationType == StationType.Check)
+                {
+                    GetProperty(station);
+                }
             }
         }
         private void DeattachStation(Station station)
         {
-            string key = station.IP + station.Rack + station.Slot;
+            string key = station.Ip + station.Rack + station.Slot;
             lock (_locker)
             {
                 IPLCLayer? plc;
-                var stations = _stations.Where(x => x.Rack == station.Rack && x.IP == station.IP && x.Rack == station.Rack).ToList();
+                var stations = _stations.Where(x => x.Rack == station.Rack && x.Ip == station.Ip && x.Rack == station.Rack).ToList();
                 if (stations.Count == 1)
                 {
                     if (_plcs.TryGetValue(key, out plc))
@@ -157,7 +201,7 @@ namespace PalettaPolizeiPro.Services.PalettaControl
         }
         private IPLCLayer? FindPlcFromStation(Station station)
         {
-            string key = station.IP + station.Rack + station.Slot;
+            string key = station.Ip + station.Rack + station.Slot;
             IPLCLayer? plc;
             if (!_plcs.TryGetValue(key, out plc))
             {
@@ -180,7 +224,7 @@ namespace PalettaPolizeiPro.Services.PalettaControl
 
             for (int i = 0; i < 2; i++)
             {
-                byte[] temp = [ bytes.GetByteAt(0 + i) ];
+                byte[] temp = [bytes.GetByteAt(0 + i)];
                 hex += BitConverter.ToString(temp);
             }
 
@@ -193,7 +237,7 @@ namespace PalettaPolizeiPro.Services.PalettaControl
 
             return "L" + lNummer + "W" + wNummer;
         }
-      
+
         private void OnAdd(Station station)
         {
             AttachStation(station);
@@ -207,7 +251,15 @@ namespace PalettaPolizeiPro.Services.PalettaControl
             lock (_locker)
             {
                 var st = _stations.FirstOrDefault(x => x.Id == station.Id);
-                st = station;
+                if (st is null)
+                {
+                    return;
+                }
+                st.Update(station);
+                foreach (Station stat in _stations)
+                {
+                    Console.WriteLine(stat.Name);
+                }
             }
         }
 
@@ -247,5 +299,38 @@ namespace PalettaPolizeiPro.Services.PalettaControl
             }
             return groups;
         }
+        public bool IsParentPlcConnected(Station station)
+        {
+            var plc = FindPlcFromStation(station);
+            if (plc is null)
+            {
+                return false;
+            }
+            return plc.IsConnected;
+        }
+
+        public PalettaProperty? GetCachedProperty(Station station)
+        {
+            PalettaProperty? p = null;
+            bool val = PropertyCache.TryGetValue(station, out p);
+            if (!val)
+            {
+                return null;
+            }
+            return p;
+        }
+
+        public QueryState? GetCachedQueryState(Station station)
+        {
+            QueryState? q = null;
+            bool val = QueryCache.TryGetValue(station, out q);
+            if (!val)
+            {
+                return null;
+            }
+            return q;
+        }
+
+
     }
 }

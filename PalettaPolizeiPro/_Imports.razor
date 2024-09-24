@@ -11,6 +11,7 @@
 @using PalettaPolizeiPro.Data
 @using PalettaPolizeiPro.Data.Users
 @using PalettaPolizeiPro.Services
+@using PalettaPolizeiPro.Services.Events
 @using PalettaPolizeiPro.Services.PalettaControl
 @using PalettaPolizeiPro.Services.Stations
 @using PalettaPolizeiPro.Services.Users
@@ -30,3 +31,6 @@
 @inject ILoginService LoginService
 @inject IStationService StationService
 @inject IPalettaControlService PalettaControl
+@inject ClientIpService IpSerivce
+@inject LineEventService EventService
+@inject LineControlProcess LineProcess

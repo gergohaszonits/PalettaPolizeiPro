@@ -78,12 +78,18 @@ namespace PalettaPolizeiPro.Services.PLC
             if (repl is LinePacketReplyRead)
             {
                 return ((LinePacketReplyRead)repl).BitValue;
+            
+
+            }
+            else if (repl is LinePacketReplyError)
+            {
+                throw new Exception(((LinePacketReplyError)repl).ErrorText);
             }
             else { return false; }
         }
 
         public byte[] GetBytes(int db, int index, int size)
-        {
+        {     
             var repl = _client.SendRequest(new LinePacketReadRequest
             {
                 Db = db,
@@ -98,6 +104,10 @@ namespace PalettaPolizeiPro.Services.PLC
             if (repl is LinePacketReplyRead)
             {
                 return ((LinePacketReplyRead)repl).Data;
+            }
+            else if (repl is LinePacketReplyError)
+            {
+                throw new Exception(((LinePacketReplyError)repl).ErrorText);
             }
             else { return new byte[0]; }
         }
@@ -116,6 +126,10 @@ namespace PalettaPolizeiPro.Services.PLC
                 Slot = this.Slot,
                 Intent = LinePacketIntent.Write
             });
+            if (repl is LinePacketReplyError)
+            {
+                throw new Exception(((LinePacketReplyError)repl).ErrorText);
+            }
         }
 
         public void SetBytes(int db, int index, int size, byte[] bytes)
@@ -131,6 +145,10 @@ namespace PalettaPolizeiPro.Services.PLC
                 Slot = this.Slot,
                 Intent = LinePacketIntent.Write
             });
+            if (repl is LinePacketReplyError)
+            {
+                throw new Exception(((LinePacketReplyError)repl).ErrorText);
+            }
         }
     }
 }

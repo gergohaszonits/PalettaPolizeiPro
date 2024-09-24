@@ -17,7 +17,7 @@ namespace PalettaPolizeiPro.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.2")
+                .HasAnnotation("ProductVersion", "8.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -52,7 +52,7 @@ namespace PalettaPolizeiPro.Migrations
                     b.ToTable("OrderPaletta1");
                 });
 
-            modelBuilder.Entity("PalettaPolizeiPro.Data.Notification", b =>
+            modelBuilder.Entity("PalettaPolizeiPro.Data.EKS.Eks", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -60,28 +60,98 @@ namespace PalettaPolizeiPro.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
-                    b.Property<string>("Body")
+                    b.Property<string>("KeyId")
+                        .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Discriminator")
-                        .IsRequired()
-                        .HasMaxLength(21)
-                        .HasColumnType("character varying(21)");
-
-                    b.Property<int>("Level")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Title")
+                    b.Property<string>("WorkerId")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Eks");
+                });
 
-                    b.HasDiscriminator<string>("Discriminator").HasValue("Notification");
+            modelBuilder.Entity("PalettaPolizeiPro.Data.Events.CheckEventArgs", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
 
-                    b.UseTphMappingStrategy();
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("PropertyId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("StationId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("Time")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PropertyId");
+
+                    b.HasIndex("StationId");
+
+                    b.ToTable("CheckEvents");
+                });
+
+            modelBuilder.Entity("PalettaPolizeiPro.Data.Events.EksEventArgs", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("EksId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("State")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("StationId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("Time")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EksId");
+
+                    b.HasIndex("StationId");
+
+                    b.ToTable("EksEvents");
+                });
+
+            modelBuilder.Entity("PalettaPolizeiPro.Data.Events.QueryEventArgs", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("StateId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("StationId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("Time")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StateId");
+
+                    b.HasIndex("StationId");
+
+                    b.ToTable("QueryEvents");
                 });
 
             modelBuilder.Entity("PalettaPolizeiPro.Data.Palettas.Order", b =>
@@ -93,10 +163,10 @@ namespace PalettaPolizeiPro.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime?>("EndSortTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("FinishedTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("InfoText")
                         .HasColumnType("text");
@@ -105,10 +175,10 @@ namespace PalettaPolizeiPro.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<DateTime?>("ScheduledTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("StartSortTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -176,7 +246,7 @@ namespace PalettaPolizeiPro.Migrations
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("ReadTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -209,7 +279,30 @@ namespace PalettaPolizeiPro.Migrations
 
                     b.HasIndex("PalettaId");
 
-                    b.ToTable("QueryEvents");
+                    b.ToTable("QueryStates");
+                });
+
+            modelBuilder.Entity("PalettaPolizeiPro.Data.ServerNotification", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Body")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ServerNotifications");
                 });
 
             modelBuilder.Entity("PalettaPolizeiPro.Data.Stations.Station", b =>
@@ -223,7 +316,7 @@ namespace PalettaPolizeiPro.Migrations
                     b.Property<int>("DB")
                         .HasColumnType("integer");
 
-                    b.Property<string>("IP")
+                    b.Property<string>("Ip")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -243,6 +336,9 @@ namespace PalettaPolizeiPro.Migrations
                     b.Property<int>("Slot")
                         .HasColumnType("integer");
 
+                    b.Property<string>("StationPcIp")
+                        .HasColumnType("text");
+
                     b.Property<int>("StationType")
                         .HasColumnType("integer");
 
@@ -258,6 +354,9 @@ namespace PalettaPolizeiPro.Migrations
                         .HasColumnType("bigint");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("EksId")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Password")
                         .IsRequired()
@@ -275,43 +374,9 @@ namespace PalettaPolizeiPro.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("EksId");
+
                     b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("PalettaPolizeiPro.Data.PalettaNotification", b =>
-                {
-                    b.HasBaseType("PalettaPolizeiPro.Data.Notification");
-
-                    b.Property<long>("PalettaId")
-                        .HasColumnType("bigint");
-
-                    b.HasIndex("PalettaId");
-
-                    b.HasDiscriminator().HasValue("PalettaNotification");
-                });
-
-            modelBuilder.Entity("PalettaPolizeiPro.Data.QueryNotification", b =>
-                {
-                    b.HasBaseType("PalettaPolizeiPro.Data.Notification");
-
-                    b.Property<long>("QueryStateId")
-                        .HasColumnType("bigint");
-
-                    b.HasIndex("QueryStateId");
-
-                    b.HasDiscriminator().HasValue("QueryNotification");
-                });
-
-            modelBuilder.Entity("PalettaPolizeiPro.Data.UserNotification", b =>
-                {
-                    b.HasBaseType("PalettaPolizeiPro.Data.Notification");
-
-                    b.Property<long>("UserId")
-                        .HasColumnType("bigint");
-
-                    b.HasIndex("UserId");
-
-                    b.HasDiscriminator().HasValue("UserNotification");
                 });
 
             modelBuilder.Entity("OrderPaletta", b =>
@@ -344,6 +409,63 @@ namespace PalettaPolizeiPro.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("PalettaPolizeiPro.Data.Events.CheckEventArgs", b =>
+                {
+                    b.HasOne("PalettaPolizeiPro.Data.Palettas.PalettaProperty", "Property")
+                        .WithMany()
+                        .HasForeignKey("PropertyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PalettaPolizeiPro.Data.Stations.Station", "Station")
+                        .WithMany()
+                        .HasForeignKey("StationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Property");
+
+                    b.Navigation("Station");
+                });
+
+            modelBuilder.Entity("PalettaPolizeiPro.Data.Events.EksEventArgs", b =>
+                {
+                    b.HasOne("PalettaPolizeiPro.Data.EKS.Eks", "Eks")
+                        .WithMany()
+                        .HasForeignKey("EksId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PalettaPolizeiPro.Data.Stations.Station", "Station")
+                        .WithMany()
+                        .HasForeignKey("StationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Eks");
+
+                    b.Navigation("Station");
+                });
+
+            modelBuilder.Entity("PalettaPolizeiPro.Data.Events.QueryEventArgs", b =>
+                {
+                    b.HasOne("PalettaPolizeiPro.Data.Palettas.QueryState", "State")
+                        .WithMany()
+                        .HasForeignKey("StateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PalettaPolizeiPro.Data.Stations.Station", "Station")
+                        .WithMany()
+                        .HasForeignKey("StationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("State");
+
+                    b.Navigation("Station");
+                });
+
             modelBuilder.Entity("PalettaPolizeiPro.Data.Palettas.Order", b =>
                 {
                     b.HasOne("PalettaPolizeiPro.Data.Users.User", "User")
@@ -371,37 +493,13 @@ namespace PalettaPolizeiPro.Migrations
                     b.Navigation("Paletta");
                 });
 
-            modelBuilder.Entity("PalettaPolizeiPro.Data.PalettaNotification", b =>
+            modelBuilder.Entity("PalettaPolizeiPro.Data.Users.User", b =>
                 {
-                    b.HasOne("PalettaPolizeiPro.Data.Palettas.Paletta", "Paletta")
+                    b.HasOne("PalettaPolizeiPro.Data.EKS.Eks", "Eks")
                         .WithMany()
-                        .HasForeignKey("PalettaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("EksId");
 
-                    b.Navigation("Paletta");
-                });
-
-            modelBuilder.Entity("PalettaPolizeiPro.Data.QueryNotification", b =>
-                {
-                    b.HasOne("PalettaPolizeiPro.Data.Palettas.QueryState", "QueryState")
-                        .WithMany()
-                        .HasForeignKey("QueryStateId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("QueryState");
-                });
-
-            modelBuilder.Entity("PalettaPolizeiPro.Data.UserNotification", b =>
-                {
-                    b.HasOne("PalettaPolizeiPro.Data.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
+                    b.Navigation("Eks");
                 });
 
             modelBuilder.Entity("PalettaPolizeiPro.Data.Palettas.Paletta", b =>

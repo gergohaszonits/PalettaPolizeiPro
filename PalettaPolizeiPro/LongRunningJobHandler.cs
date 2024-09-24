@@ -15,16 +15,16 @@ namespace PalettaPolizeiPro
      
         public void Start()
         {
-            _mainThread = new Thread(Run);
+            _mainThread = new Thread(async()=> { await Run(); });
             _mainThread.Start();
         }
-        private void Run()
+        private async Task Run()
         {
             while (ProgramRunning)
             { 
                 foreach (var item in _updatables)
                 {
-                    item.Update();
+                    await item.Update();
                 }
                 if (_threadSleep > 0)
                 {

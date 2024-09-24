@@ -48,7 +48,7 @@ namespace PalettaPolizeiPro.Services.Simulation
 
 
 
-        public List<Notification> Notifications { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public List<ServerNotification> Notifications { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public byte[] GetBytes(int db, int index, int size)
         {

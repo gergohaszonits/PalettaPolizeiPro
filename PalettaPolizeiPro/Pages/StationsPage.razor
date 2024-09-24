@@ -1,44 +1,226 @@
 ﻿@page "/stations"
+@using PalettaPolizeiPro.Data.Palettas
 @using PalettaPolizeiPro.Data.Stations
 @using PalettaPolizeiPro.Dialogs
 @using PalettaPolizeiPro.Services.PLC
-<MudPaper Elevation="25">
-    <MudToolBar>
-        <MudIconButton OnClick="AddClicked" Icon="@Icons.Material.Outlined.Add" />
-        <MudIconButton Icon="@Icons.Material.Filled.Expand" />
-        <MudIconButton Icon="@Icons.Material.Filled.Compress" />
+@using System.Text
 
-        <MudIconButton Style="margin-left:30px" Color="Color.Error" Icon="@Icons.Material.Filled.HighlightOff" />
-        <MudIconButton Color="Color.Success" Icon="@Icons.Material.Filled.Check" />
+<MudText Class="mb-2" Typo="Typo.subtitle2">Állomások - PLCk</MudText>
+<MudPaper Elevation="12">
+    <MudToolBar>
+        <MudIconButton OnClick="AddClicked" Size="MudBlazor.Size.Medium" Icon="@Icons.Material.Rounded.Add" />
+        <MudFileUpload T="IBrowserFile" Accept=".csv" FilesChanged="ImportCSV">
+            <ActivatorContent>
+                <MudIconButton Size="MudBlazor.Size.Medium" Color="Color.Primary"
+                               Icon="@Icons.Material.Filled.Folder">
+                </MudIconButton>
+            </ActivatorContent>
+        </MudFileUpload>
+
         <MudSpacer />
-        <MudIconButton Icon="@Icons.Material.Outlined.Timeline" Color="Color.Inherit" />
-        <MudText Typo="Typo.caption">120 ms</MudText>
+        <MudIconButton OnClick="DisconnectAll" Style=" " Color="Color.Error" Icon="@Icons.Material.Filled.HighlightOff" />
+        <MudIconButton OnClick="ConnectAll" Color="Color.Success" Icon="@Icons.Material.Filled.Check" />
+        <MudIconButton OnClick="OpenGraph" Icon="@Icons.Material.Outlined.Timeline" Color="Color.Inherit" />
+        <MudText Typo="Typo.caption">@LineProcess.LastUpdateDuration.Milliseconds ms</MudText>
     </MudToolBar>
+</MudPaper>
+<div style="height:20px"></div>
+<MudPaper Elevation="12">
     <MudExpansionPanels MultiExpansion="true">
-        @{int i = 0;}
         @foreach (var group in _groups)
         {
-
-            <MudExpansionPanel IsExpanded="@expansions[i]"  Class="">
+            <MudExpansionPanel Class="">
                 <TitleContent>
-                    <div class="d-flex">
+                    @{
+                        string st;
+                        if (group.Plc.IsConnected)
+                        {
+                            st = "background-color:rgba(20,130,20,0.2);border-radius:10px;padding:0px";
+                        }
+                        else
+                        {
+                            st = "background-color:rgba(130,20,20,0.2);border-radius:10px;padding:0px";
+                        }
+                    }
+                    <div style="@st" class=" d-flex">
                         <MudIcon Color="(group.Plc.IsConnected ? Color.Primary : Color.Error)" Size="MudBlazor.Size.Medium" Icon="@GetConnectionIcon(group)" class="mr-3"></MudIcon>
                         <MudText><strong>@group.Plc.IP</strong></MudText>
+                        @foreach (var loop in group.Stations.Select(x => x.Loop).Distinct().ToList())
+                        {
+                            <MudChip T="string" Class="ml-2" Style="margin:0px;padding:6px; height:25px;" Size="MudBlazor.Size.Small"><strong>loop @loop</strong></MudChip>
+                        }
                     </div>
                 </TitleContent>
                 <ChildContent>
-                    @if (group.Plc.IsConnected)
-                    {
-                        <MudButton OnClick="()=>DisconnectClicked(group.Plc)" Variant="Variant.Outlined" Color="Color.Error" EndIcon="@Icons.Material.Rounded.ExitToApp">Kapcsolat bontása</MudButton>
-                    }
-                    else
-                    {
-                        <MudButton OnClick="()=>ConnectClicked(group.Plc)" Variant="Variant.Outlined" Color="Color.Success" EndIcon="@Icons.Material.Rounded.Check">Csatlakozás</MudButton>
+                    <MudStack>
+                        @if (group.Plc.IsConnected)
+                        {
+                            <MudButton OnClick="()=>DisconnectClicked(group.Plc)" Variant="Variant.Outlined" Color="Color.Error" EndIcon="@Icons.Material.Rounded.ExitToApp">Kapcsolat bontása</MudButton>
+                        }
+                        else
+                        {
+                            <MudButton OnClick="()=>ConnectClicked(group.Plc)" Variant="Variant.Outlined" Color="Color.Success" EndIcon="@Icons.Material.Rounded.Check">Csatlakozás</MudButton>
+                        }
 
-                    }
+                        <MudDivider />
+                        <MudText Typo="Typo.caption">Vezérlő</MudText>
+                        @foreach (var station in group.Stations.Where(x => x.StationType == StationType.Query))
+                        {
+                            var state = PalettaControl.GetCachedQueryState(station);
+                            bool isOn;
+                            if (state is null)
+                            {
+                                isOn = false;
+                            }
+                            else
+                            {
+                                isOn = state.OperationStatus == 255;
+                            }
+                            string color;
+                            if (!group.Plc.IsConnected)
+                            {
+                                color = "";
+                            }
+                            else if (!isOn)
+                            {
+                                color = "background-color:rgba(130,20,20,0.3)";
+                            }
+                            else
+                            {
+                                color = "background-color:rgba(20,130,20,0.3)";
+
+                            }
+                            <MudPaper Style="@color" Class="pa-3">
+
+                                <div class="d-flex">
+                                    <MudText><strong>@station.Name</strong></MudText>
+                                    <MudChip T="string" Class="ml-2" Style="margin:0px;padding:6px; height:25px;" Size="MudBlazor.Size.Small"><strong>db @station.DB</strong></MudChip>
+                                    <MudChip T="string" Class="ml-2" Style="margin:0px;padding:6px; height:25px;" Size="MudBlazor.Size.Small"><strong>rack @station.Rack</strong></MudChip>
+                                    <MudChip T="string" Class="ml-2" Style="margin:0px;padding:6px; height:25px;" Size="MudBlazor.Size.Small"><strong>slot @station.Slot</strong></MudChip>
+                                    <MudChip T="string" Class="ml-2" Style="margin:0px;padding:6px; height:25px;" Size="MudBlazor.Size.Small"><strong>loop @station.Loop</strong></MudChip>
+                                    <MudChip T="string" Class="ml-2" Style="margin:0px;padding:6px; height:25px;" Size="MudBlazor.Size.Small"><strong># @station.Id</strong></MudChip>
+                                    <MudSpacer></MudSpacer>
+                                    <div class="d-flex gap-4">
+                                        <MudButton OnClick="()=>ToggleStation(station)" Variant="Variant.Outlined">Ki/Be</MudButton>
+                                        <MudIconButton OnClick="()=>EditStation(station)" Size="MudBlazor.Size.Small" Icon="@Icons.Material.Rounded.Edit"></MudIconButton>
+                                        <MudIconButton OnClick="()=>OpenQueryStatesView(station)" Size="MudBlazor.Size.Small" Icon="@Icons.Material.Rounded.TableRows"></MudIconButton>
+                                    </div>
+                                </div>
+                                @if (group.Plc.IsConnected)
+                                {
+                                    <div class="d-flex">
+                                        @{
+                                            @if (state is not null && !string.IsNullOrWhiteSpace(state.PalettaName))
+                                            {
+                                                <MudChip T="string" Color="Color.Primary" Size="MudBlazor.Size.Small">@state.PalettaName</MudChip>
+                                            }
+                                            else
+                                            {
+                                                <MudChip T="string" Color="Color.Error" Size="MudBlazor.Size.Small">Üres</MudChip>
+                                            }
+                                        }
+                                    </div>
+                                }
+                            </MudPaper>
+                        }
+                        <MudDivider />
+                        <MudText Typo="Typo.caption">Adatgyűjtő</MudText>
+                        @foreach (var station in group.Stations.Where(x => x.StationType == StationType.Check))
+                        {
+                            bool isOn = station.IsStationOn;
+                            string color;
+                            if (!group.Plc.IsConnected)
+                            {
+                                color = "";
+                            }
+                            else if (!isOn)
+                            {
+                                color = "background-color:rgba(130,20,20,0.3)";
+                            }
+                            else
+                            {
+                                color = "background-color:rgba(20,130,20,0.3)";
+
+                            }
+
+                            <MudPaper Style="@color" Class="pa-3">
+                                <div class="d-flex">
+                                    <MudText><strong>@station.Name</strong></MudText>
+                                    <MudChip T="string" Class="ml-2" Style="margin:0px;padding:6px; height:25px;" Size="MudBlazor.Size.Small"><strong>db @station.DB</strong></MudChip>
+                                    <MudChip T="string" Class="ml-2" Style="margin:0px;padding:6px; height:25px;" Size="MudBlazor.Size.Small"><strong>rack @station.Rack</strong></MudChip>
+                                    <MudChip T="string" Class="ml-2" Style="margin:0px;padding:6px; height:25px;" Size="MudBlazor.Size.Small"><strong>slot @station.Slot</strong></MudChip>
+                                    <MudChip T="string" Class="ml-2" Style="margin:0px;padding:6px; height:25px;" Size="MudBlazor.Size.Small"><strong>loop @station.Loop</strong></MudChip>
+                                    <MudChip T="string" Class="ml-2" Style="margin:0px;padding:6px; height:25px;" Size="MudBlazor.Size.Small"><strong># @station.Id</strong></MudChip>
+                                    <MudSpacer></MudSpacer>
+                                    <div class="d-flex gap-4">
+                                        <MudButton OnClick="()=>ToggleStation(station)" Variant="Variant.Outlined">Ki/Be</MudButton>
+
+                                        <MudIconButton OnClick="()=>EditStation(station)" Size="MudBlazor.Size.Small" Icon="@Icons.Material.Rounded.Edit"></MudIconButton>
+
+                                        <MudIconButton OnClick="()=>OpenPalettaPropertiesView(station)" Size="MudBlazor.Size.Small" Icon="@Icons.Material.Rounded.TableRows"></MudIconButton>
+                                    </div>
+                                </div>
+                                @if (group.Plc.IsConnected)
+                                {
+                                    <div class="d-flex">
+                                        @{
+                                            var prop = PalettaControl.GetCachedProperty(station);
+                                        }
+                                        @if (prop is not null && !string.IsNullOrWhiteSpace(prop.Identifier))
+                                        {
+                                            <MudChip T="string" Color="Color.Primary" Size="MudBlazor.Size.Small">@prop.Identifier</MudChip>
+                                            <MudChip T="string" Color="Color.Primary" Size="MudBlazor.Size.Small">@Math.Round(prop.ServicePercentage, 2)%</MudChip>
+                                        }
+                                        else
+                                        {
+                                            <MudChip T="string" Color="Color.Error" Size="MudBlazor.Size.Small">Üres</MudChip>
+                                        }
+                                    </div>
+                                }
+                            </MudPaper>
+                        }
+                        <MudDivider />
+                        <MudText Typo="Typo.caption">EKS pont</MudText>
+                        @foreach (var station in group.Stations.Where(x => x.StationType == StationType.Eks))
+                        {
+                            bool isOn = station.IsStationOn;
+                            string color;
+                            if (!group.Plc.IsConnected)
+                            {
+                                color = "";
+                            }
+                            else if (!isOn)
+                            {
+                                color = "background-color:rgba(130,20,20,0.3)";
+                            }
+                            else
+                            {
+                                color = "background-color:rgba(20,130,20,0.3)";
+
+                            }
+                            <MudPaper Style="@color" Class="pa-3">
+
+                                <div class="d-flex">
+                                    <MudText><strong>@station.Name</strong></MudText>
+                                    <MudChip T="string" Class="ml-2" Style="margin:0px;padding:6px; height:25px;" Size="MudBlazor.Size.Small"><strong>db @station.DB</strong></MudChip>
+                                    <MudChip T="string" Class="ml-2" Style="margin:0px;padding:6px; height:25px;" Size="MudBlazor.Size.Small"><strong>rack @station.Rack</strong></MudChip>
+                                    <MudChip T="string" Class="ml-2" Style="margin:0px;padding:6px; height:25px;" Size="MudBlazor.Size.Small"><strong>slot @station.Slot</strong></MudChip>
+                                    <MudChip T="string" Class="ml-2" Style="margin:0px;padding:6px; height:25px;" Size="MudBlazor.Size.Small"><strong>loop @station.Loop</strong></MudChip>
+                                    <MudChip T="string" Class="ml-2" Style="margin:0px;padding:6px; height:25px;" Size="MudBlazor.Size.Small"><strong># @station.Id</strong></MudChip>
+                                    <MudSpacer></MudSpacer>
+                                    <div class="d-flex gap-4">
+                                        <MudButton OnClick="()=>ToggleStation(station)" Variant="Variant.Outlined">Ki/Be</MudButton>
+
+                                        <MudIconButton OnClick="()=>EditStation(station)" Size="MudBlazor.Size.Small" Icon="@Icons.Material.Rounded.Edit"></MudIconButton>
+
+                                        <MudIconButton Size="MudBlazor.Size.Small" Icon="@Icons.Material.Rounded.TableRows"></MudIconButton>
+                                    </div>
+                                </div>
+                            </MudPaper>
+                        }
+                    </MudStack>
                 </ChildContent>
             </MudExpansionPanel>
-            i++;
         }
     </MudExpansionPanels>
 </MudPaper>
@@ -54,40 +236,119 @@
     * Állomás előzmények exportálás csv be vagy xlsx
     * Kapcsolati problémák logolása és megjelenítése állomásokrta lebontva
     * Kimaradások és csatlakozási hosszak megjelenítése
+    *
     */
-    List<PlcStationGroups> _groups { get; set; }
-    bool[] expansions;
-
-
+    private List<PlcStationGroups> _groups { get; set; }
 
     protected override void OnInitialized()
     {
         Load();
+
+        EventService.CheckEvent += (s, a) =>
+        {
+            InvokeAsync(StateHasChanged);
+        };
+        EventService.QueryEvent += (s, a) =>
+       {
+           InvokeAsync(StateHasChanged);
+       };
+        EventService.EksEvent += (s, a) =>
+        {
+            InvokeAsync(StateHasChanged);
+        };
+
     }
     private void Load()
     {
         _groups = PalettaControl.GetPlcStationGroups();
-        expansions = new bool[_groups.Count];
     }
-    private void ExpandAll()
+    private void ToggleStation(Station station)
     {
-        for(int i = 0; i< expansions.Length;i++)
+        if (!PalettaControl.IsParentPlcConnected(station))
         {
-            expansions[i] = true;
+            Snackbar.Add("PLC kikapcsolt állapotban van", Severity.Error);
+            return;
+        }
+        if (station.StationType == StationType.Query)
+        {
+            var state = PalettaControl.GetQueryState(station);
+            if (state.OperationStatus == 255)
+            {
+                PalettaControl.OperationStatusOff(station);
+            }
+            else
+            {
+                PalettaControl.OperationStatusOn(station);
+            }
+        }
+        else
+        {
+            station.IsStationOn = !station.IsStationOn;
         }
         InvokeAsync(StateHasChanged);
     }
-    private void CollapseAll()
+    private void DisconnectAll()
     {
-        for (int i = 0; i < expansions.Length; i++)
+        foreach (var group in _groups)
         {
-            expansions[i] = false;
+            try
+            {
+                foreach (var station in group.Stations)
+                {
+                    if (station.StationType == StationType.Query)
+                    {
+
+                        PalettaControl.OperationStatusOff(station);
+
+                    }
+                    else
+                    {
+                        station.IsStationOn = false;
+                    }
+                }
+                group.Plc.Disconnect();
+                InvokeAsync(StateHasChanged);
+            }
+            catch (Exception ex)
+            {
+                LogService.LogException(ex);
+                Snackbar.Add(ex.Message);
+
+            }
+        }
+        InvokeAsync(StateHasChanged);
+    }
+    private void ConnectAll()
+    {
+        foreach (var group in _groups)
+        {
+            try
+            {
+                group.Plc.Connect();
+                foreach (var station in group.Stations)
+                {
+                    if (station.StationType == StationType.Query)
+                    {
+                        PalettaControl.OperationStatusOn(station);
+                    }
+                    else
+                    {
+                        station.IsStationOn = true;
+                    }
+                }
+                InvokeAsync(StateHasChanged);
+            }
+            catch (Exception ex)
+            {
+                LogService.LogException(ex);
+                Snackbar.Add(ex.Message);
+            }
         }
         InvokeAsync(StateHasChanged);
     }
     private async Task AddClicked()
     {
-        var dialog = await Dialog.ShowAsync<StationEditor>("Állomás hozzáadása", new DialogOptions
+        var dialog = await Dialog.ShowAsync<StationEditorDialog>("Állomás hozzáadása", new DialogOptions
             {
                 CloseButton = true,
                 CloseOnEscapeKey = true,
@@ -112,7 +373,6 @@
     {
         if (group.Plc.IsConnected)
         {
-
             return Icons.Material.Filled.Polyline;
         }
         return Icons.Material.Filled.ErrorOutline;
@@ -126,6 +386,7 @@
         }
         catch (Exception ex)
         {
+            Snackbar.Add(ex.Message);
             LogService.LogException(ex);
         }
     }
@@ -139,6 +400,144 @@
         catch (Exception ex)
         {
             LogService.LogException(ex);
+            Snackbar.Add(ex.Message);
         }
+    }
+    private async Task EditStation(Station station)
+    {
+        var parameters = new DialogParameters<StationEditorDialog>();
+        parameters.Add(x => x.Station, station);
+        var dialog = await Dialog.ShowAsync<StationEditorDialog>("Állomás szerkesztése", parameters, new DialogOptions
+            {
+                CloseButton = true,
+                CloseOnEscapeKey = true,
+            });
+        var result = await dialog.Result;
+        Station? st = (Station?)result.Data;
+        if (st is null) { return; }
+        try
+        {
+            StationService.ModifyStation(st);
+            Snackbar.Add("Állomás módosítva", Severity.Info);
+            _groups = PalettaControl.GetPlcStationGroups();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            LogService.LogException(ex);
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+    private async Task OpenGraph()
+    {
+        var dialog = await Dialog.ShowAsync<ConnectionGraphDialog>("Kommunikáció sebesség", new DialogOptions
+            {
+                CloseButton = true,
+                CloseOnEscapeKey = true,
+            });
+    }
+    private async Task ImportCSV(IBrowserFile file)
+    {
+        var stream = file.OpenReadStream();
+        byte[] buffer = new byte[file.Size];
+        try
+        {
+            await stream.ReadExactlyAsync(buffer, 0, buffer.Length);
+        }
+        catch (Exception ex)
+        {
+            LogService.LogException(ex);
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            stream.Dispose();
+        }
+
+        string text = Encoding.UTF8.GetString(buffer);
+        string[] lines = text.Split('\n');
+
+        try
+        {
+            ParseCSV(lines);
+            Load();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+            Snackbar.Add("Nem megfelelő CSV struktúra", Severity.Warning);
+            Snackbar.Add("NÉV;LOOP;IP;RACK;SLOT;DB,TYPE,(EKS PC IP)", Severity.Info);
+
+            LogService.LogException(ex);
+        }
+    }
+    private void ParseCSV(string[] csv)
+    {
+        foreach (var line in csv)
+        {
+            if (string.IsNullOrWhiteSpace(line))
+            {
+                continue;
+            }
+            int j = 0;
+            string[] parts = line.Split(';');
+            parts[6] = parts[6].Trim();
+            StationType type;
+            Console.WriteLine($"[{parts[6]}]");
+            if (parts[6] == "EKS")
+            {
+                type = StationType.Eks;
+            }
+            else if (parts[6] == "QUERY")
+            {
+                type = StationType.Query;
+            }
+            else
+            {
+                type = StationType.Check;
+            }
+
+            StationService.AddStation(new Station
+                {
+                    Ip = parts[2],
+                    Name = parts[0],
+                    Rack = Convert.ToInt32(parts[3]),
+                    Slot = Convert.ToInt32(parts[4]),
+                    Loop = Convert.ToInt32(parts[1]),
+                    DB = Convert.ToInt32(parts[5]),
+                    StationType = type,
+                    IsStationOn = true,
+                    StationPcIp = StationType.Eks == type ? parts[7] : null
+                });
+        }
+    }
+    private async Task OpenPalettaPropertiesView(Station station)
+    {
+        var parameters = new DialogParameters<ViewPalettaPropertyDialog>();
+        parameters.Add(x => x.Station, station);
+        var dialog = await Dialog.ShowAsync<ViewPalettaPropertyDialog>(station.Name, parameters, new DialogOptions
+            {
+
+                CloseButton = true,
+                CloseOnEscapeKey = true,
+                FullScreen = false,
+                MaxWidth = MaxWidth.ExtraExtraLarge,
+                FullWidth = true,
+            });
+    }
+    private async Task OpenQueryStatesView(Station station)
+    {
+        var parameters = new DialogParameters<ViewQueryStatesDialog>();
+        parameters.Add(x => x.Station, station);
+        var dialog = await Dialog.ShowAsync<ViewQueryStatesDialog>(station.Name, parameters, new DialogOptions
+            {
+
+                CloseButton = true,
+                CloseOnEscapeKey = true,
+                FullScreen = false,
+                MaxWidth = MaxWidth.ExtraExtraLarge,
+                FullWidth = true,
+            });
     }
 }

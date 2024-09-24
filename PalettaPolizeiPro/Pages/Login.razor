@@ -17,11 +17,11 @@
             var dialog = await Dialog.ShowAsync<LoginDialog>("Bejelentkezés", new DialogOptions
                 {
                     CloseButton = false,
-                    DisableBackdropClick = true,
                     CloseOnEscapeKey = false,
                     FullScreen = false,
+                    BackdropClick = false,
                 });
-            var result  = await dialog.Result;
+            var result = await dialog.Result;
             UserCredentialsDTO cred = (UserCredentialsDTO)result.Data;
             var user = LoginService.LogIn(cred);
             if (user is null)
@@ -34,8 +34,8 @@
                 MyClient.User = user;
             }
         }
-        catch (Exception  ex){ Snackbar.Add(ex.Message,Severity.Error); }
-       
+        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
+
     }
 }
 

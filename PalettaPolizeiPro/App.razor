@@ -9,3 +9,11 @@
         </LayoutView>
     </NotFound>
 </Router>
+
+@code
+{
+    protected override void OnInitialized()
+    {
+        MyClient.Ip = IpSerivce.GetClientIpAddress();
+    }
+}

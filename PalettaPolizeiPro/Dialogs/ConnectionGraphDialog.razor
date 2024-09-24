@@ -1,0 +1,35 @@
+﻿<div class="d-flex  ma-5">
+    <MudChart ChartType="MudBlazor.ChartType.Line" ChartSeries="@Series" @bind-SelectedIndex="Index" Width="100%" Height="350px"></MudChart>
+</div>
+
+@code {
+    private int Index = -1;
+    private static int ChartSize = 300;
+
+    protected override void OnInitialized()
+    {
+        LineProcess.OnLastTickDuration += AddPoint;
+    }
+
+    private List<ChartSeries> Series = new List<ChartSeries>()
+    {
+        new ChartSeries() { Name = "Válaszidő (millis)", Data = new double[ChartSize] },
+    };
+
+    void AddPoint(object? sender, TimeSpan value)
+    {
+        for (int i = 0; i < ChartSize - 1; i++)
+        {
+            Series[0].Data[i] = Series[0].Data[i + 1];
+        }
+        Series[0].Data[ChartSize - 1] = value.Milliseconds;
+        InvokeAsync(StateHasChanged);
+    }
+
+    @implements IDisposable
+    public void Dispose()
+    {
+        LineProcess.OnLastTickDuration -= AddPoint;
+        GC.Collect();
+    }
+}

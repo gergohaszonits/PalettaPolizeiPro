@@ -12,12 +12,12 @@
 <MudSnackbarProvider />
 @if (MyClient.User is null)
 {
-    return;    
+    return;
 }
 <MudLayout>
     <MudAppBar Color="Color.Secondary" Elevation="0">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Primary" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-        <MudChip Class="shadow" Color="Color.Primary" Icon="@Icons.Material.Outlined.Person2">@MyClient.User.Username</MudChip>
+        <MudChip T="string" Class="shadow" Color="Color.Primary" Icon="@Icons.Material.Outlined.Person2">@MyClient.User.Username</MudChip>
         <MudSpacer />
         <h3 style="color:lightblue"><i><b>Paletta Polizei</b></i></h3>
         <MudIconButton Class="ml-15" OnClick="LogOut" Icon="@Icons.Material.Filled.Logout" Color="Color.Primary" Target="_blank" />
@@ -70,7 +70,7 @@
             var dialog = await Dialog.ShowAsync<LoginDialog>("Bejelentkezés", new DialogOptions
                 {
                     CloseButton = false,
-                    DisableBackdropClick = true,
+                    BackdropClick = false,
                     CloseOnEscapeKey = false,
                     FullScreen = false,
                 });
