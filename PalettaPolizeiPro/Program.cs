@@ -14,6 +14,7 @@ using PalettaPolizeiPro.Database;
 using PalettaPolizeiPro.MIddleware;
 using PalettaPolizeiPro.Services;
 using PalettaPolizeiPro.Services.Events;
+using PalettaPolizeiPro.Services.Orders;
 using PalettaPolizeiPro.Services.PalettaControl;
 using PalettaPolizeiPro.Services.PLC;
 using PalettaPolizeiPro.Services.Simulation;
@@ -58,6 +59,8 @@ builder.Services.AddSingleton(typeof(LineControlProcess), lineProcess);
 
 
 builder.Services.AddScoped(typeof(ILoginService), typeof(LoginService));
+builder.Services.AddScoped(typeof(IOrderService), typeof(OrderService));
+
 builder.Services.AddSingleton(typeof(IPalettaControlService), palettaControl);
 builder.Services.AddScoped(typeof(Client));
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();

@@ -15,5 +15,6 @@
     protected override void OnInitialized()
     {
         MyClient.Ip = IpSerivce.GetClientIpAddress();
+        LogService.Log($"Acces from ip [{MyClient.Ip}]",LogLevel.Information);
     }
 }

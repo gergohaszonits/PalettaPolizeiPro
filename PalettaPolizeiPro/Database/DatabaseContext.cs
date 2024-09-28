@@ -1,7 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MudBlazor;
 using PalettaPolizeiPro.Data;
-using PalettaPolizeiPro.Data.Events;
+using PalettaPolizeiPro.Data.EKS;
+using PalettaPolizeiPro.Data.LineEvents;
 using PalettaPolizeiPro.Data.Palettas;
 using PalettaPolizeiPro.Data.Stations;
 using PalettaPolizeiPro.Data.Users;
@@ -21,7 +22,9 @@ namespace PalettaPolizeiPro.Database
         public DbSet<EksEventArgs> EksEvents { get; set; }
         public DbSet<QueryState> QueryStates { get; set; }
         public DbSet<Station> Stations { get; set; }
-
+        public DbSet<OrderPalettaScheduled> OrderPalettaSchedules { get; set; }
+        public DbSet<OrderPalettaFinished> OrderPalettaFinishes { get; set; }
+        public DbSet<Eks> Eks { get; set; }
 
         public DatabaseContext() : base()
         {
@@ -30,6 +33,7 @@ namespace PalettaPolizeiPro.Database
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (_connectionString is null) { throw new Exception("Connection string is empty..."); }
+            optionsBuilder.EnableSensitiveDataLogging();
             if (_connectionString.Contains("Host="))
             {
                 optionsBuilder.UseNpgsql(_connectionString);
@@ -43,11 +47,14 @@ namespace PalettaPolizeiPro.Database
         {
             modelBuilder.Entity<Paletta>()
              .HasMany(e => e.InScheduled)
-             .WithMany(e => e.ScheduledPalettas);
+             .WithMany(e => e.ScheduledPalettas)
+             .UsingEntity<OrderPalettaScheduled>();
 
             modelBuilder.Entity<Paletta>()
             .HasMany(e => e.InFinished)
-            .WithMany(e => e.FinishedPalettas);
+            .WithMany(e => e.FinishedPalettas)
+            .UsingEntity<OrderPalettaFinished>();
+
         }
         public static void Initialize(string connectionString)
         {

@@ -22,7 +22,7 @@ namespace PalettaPolizeiPro.Services.Users
         {
             using (var context = new DatabaseContext())
             {
-                return context.Users.FirstOrDefault(predicate);
+                return context.Users.AsNoTracking().Include(x=>x.Eks).FirstOrDefault(predicate);
             }
         }
 
@@ -30,7 +30,7 @@ namespace PalettaPolizeiPro.Services.Users
         {
             using (var context = new DatabaseContext())
             {
-                return context.Users.ToList();
+                return context.Users.AsNoTracking().Include(x => x.Eks).ToList();
             }
         }
 
@@ -38,7 +38,7 @@ namespace PalettaPolizeiPro.Services.Users
         {
             using (var context = new DatabaseContext())
             {
-                return context.Users.Where(predicate).ToList();
+                return context.Users.AsNoTracking().Include(x => x.Eks).Where(predicate).ToList();
             }
         }
 

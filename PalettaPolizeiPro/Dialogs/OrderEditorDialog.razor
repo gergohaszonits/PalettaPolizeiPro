@@ -1,0 +1,121 @@
+﻿@using PalettaPolizeiPro.Data.Palettas
+<MudDialog>
+    <DialogContent>
+        <MudStack>
+            <MudTextField @bind-Text="_palettaFilter" Immediate="true" Style="width:50%" FullWidth="false" T="string" Placeholder="keresés"></MudTextField>
+            <MudContainer Class="d-flex justify-center align-content-start flex-wrap flex-grow-1 gap-5 ma-3">
+
+
+                @foreach (var p in _palettas)
+                {
+                    @if (string.IsNullOrWhiteSpace(_palettaFilter) || p.Identifier.Contains(_palettaFilter, StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        MudBlazor.Color color = _selectedPalettas.Contains(p) ? Color.Info : Color.Surface;
+                        <MudButton OnClick="()=>PalettaClicked(p)" Color="color" Variant="Variant.Filled">
+                            <div style="d-flex">
+                                <MudProgressLinear Style="border-radius:90px" Color="Color.Secondary" Max="p.Properties[0].PredefiniedCycle" Value="p.Properties[0].ActualCycle" />
+                                <MudText Typo="Typo.subtitle1">
+                                    @p.Identifier @Math.Round(p.Properties[0].ServicePercentage, 3)%
+                                </MudText>
+                            </div>
+                        </MudButton>
+                    }
+                }
+
+            </MudContainer>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudDatePicker PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined" Rounded="true" @bind-Date="_fromDate" />
+        <MudTimePicker PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined" @bind-Time="_fromTime" />
+        <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"></MudIcon>
+        <MudDatePicker PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined" Rounded="true" @bind-Date="_toDate" />
+        <MudTimePicker PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined" @bind-Time="_toTime" />
+        <MudButton Color="Color.Surface" Variant="Variant.Filled" OnClick="DescriptionClicked">Leírás</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="AddOrder">Hozzáadás</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<Paletta> _palettas;
+    private List<Paletta> _selectedPalettas = new List<Paletta>();
+    private string _palettaFilter = "";
+    [CascadingParameter] MudDialogInstance? ThisDialog { get; set; }
+
+    private Order _order;
+
+    private string? _description = null;
+
+    private DateTime? _fromDate = DateTime.Today;
+    private TimeSpan? _fromTime = new TimeSpan(DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second);
+    private DateTime? _toDate = DateTime.Today + new TimeSpan(24, 0, 0);
+    private TimeSpan? _toTime = new TimeSpan(DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second);
+    protected override void OnInitialized()
+    {
+        _palettas = PalettaControl.GetPalettasWithLastProperty();
+        _palettas = _palettas.OrderBy(x => x.Identifier).ToList();
+    }
+    private void PalettaClicked(Paletta paletta)
+    {
+        if (!_selectedPalettas.Contains(paletta))
+        {
+            _selectedPalettas.Add(paletta);
+        }
+        else
+        {
+            _selectedPalettas.Remove(paletta);
+        }
+    }
+    private void AddOrder()
+    {
+        if (_selectedPalettas.Count == 0)
+        {
+            Snackbar.Add("Válassz palettákat", Severity.Warning);
+            return;
+        }
+
+        DateTime? start = _fromDate + _fromTime;
+        DateTime? end = _toDate + _toTime;
+
+        if (end < DateTime.Now || start >= end)
+        {
+            Snackbar.Add("Érvénytelen idő adat", Severity.Warning);
+            return;
+        }
+        _order = new Order
+            {
+                ScheduledPalettas = _selectedPalettas,
+                User = MyClient.User!,
+                UserId = MyClient.User!.Id,
+                StartSortTime = start,
+                EndSortTime = end,
+                Status = OrderStatus.Scheduled,
+                InfoText = _description,
+                ScheduledTime = DateTime.Now,
+            };
+
+        ThisDialog!.Close(_order);
+    }
+    private async Task DescriptionClicked()
+    {
+        var parameters = new DialogParameters<TextFieldDialog>();
+        parameters.Add(x => x.Text, _description);
+        parameters.Add(x => x.MaxChars, 100);
+        parameters.Add(x => x.Lines, 3);
+
+        var dialog = await Dialog.ShowAsync<TextFieldDialog>("Leírás", parameters, new DialogOptions
+            {
+                CloseButton = true,
+                CloseOnEscapeKey = true,
+            });
+        var result = await dialog.Result;
+        if (result is null)
+        {
+            _description = null;
+            return;
+        }
+        string d = (string)result!.Data!;
+
+        _description = d;
+    }
+}

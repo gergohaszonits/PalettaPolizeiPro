@@ -4,26 +4,22 @@
 @using PalettaPolizeiPro.Dialogs
 @using PalettaPolizeiPro.Services.PLC
 @using System.Text
+<MudToolBar Class="gap-4">
+    <MudIconButton Variant="Variant.Filled" OnClick="AddClicked" Size="MudBlazor.Size.Medium" Icon="@Icons.Material.Rounded.Add" />
+    <MudFileUpload T="IBrowserFile" Accept=".csv" FilesChanged="ImportCSV">
+        <ActivatorContent>
+            <MudIconButton Variant="Variant.Filled" Size="MudBlazor.Size.Medium" Color="Color.Primary"
+                           Icon="@Icons.Material.Filled.Folder">
+            </MudIconButton>
+        </ActivatorContent>
+    </MudFileUpload>
 
-<MudText Class="mb-2" Typo="Typo.subtitle2">Állomások - PLCk</MudText>
-<MudPaper Elevation="12">
-    <MudToolBar>
-        <MudIconButton OnClick="AddClicked" Size="MudBlazor.Size.Medium" Icon="@Icons.Material.Rounded.Add" />
-        <MudFileUpload T="IBrowserFile" Accept=".csv" FilesChanged="ImportCSV">
-            <ActivatorContent>
-                <MudIconButton Size="MudBlazor.Size.Medium" Color="Color.Primary"
-                               Icon="@Icons.Material.Filled.Folder">
-                </MudIconButton>
-            </ActivatorContent>
-        </MudFileUpload>
-
-        <MudSpacer />
-        <MudIconButton OnClick="DisconnectAll" Style=" " Color="Color.Error" Icon="@Icons.Material.Filled.HighlightOff" />
-        <MudIconButton OnClick="ConnectAll" Color="Color.Success" Icon="@Icons.Material.Filled.Check" />
-        <MudIconButton OnClick="OpenGraph" Icon="@Icons.Material.Outlined.Timeline" Color="Color.Inherit" />
-        <MudText Typo="Typo.caption">@LineProcess.LastUpdateDuration.Milliseconds ms</MudText>
-    </MudToolBar>
-</MudPaper>
+    <MudSpacer />
+    <MudIconButton Variant="Variant.Filled" OnClick="DisconnectAll" Style=" " Color="Color.Error" Icon="@Icons.Material.Filled.HighlightOff" />
+    <MudIconButton Variant="Variant.Filled" OnClick="ConnectAll" Color="Color.Success" Icon="@Icons.Material.Filled.Check" />
+    <MudIconButton Variant="Variant.Filled" OnClick="OpenGraph" Icon="@Icons.Material.Outlined.Timeline" Color="Color.Inherit" />
+    <MudText Typo="Typo.caption">@LineProcess.LastUpdateDuration.Milliseconds ms</MudText>
+</MudToolBar>
 <div style="height:20px"></div>
 <MudPaper Elevation="12">
     <MudExpansionPanels MultiExpansion="true">
@@ -102,6 +98,7 @@
                                     <MudSpacer></MudSpacer>
                                     <div class="d-flex gap-4">
                                         <MudButton OnClick="()=>ToggleStation(station)" Variant="Variant.Outlined">Ki/Be</MudButton>
+                                        <MudIconButton OnClick="()=>RemoveStation(station)" Size="MudBlazor.Size.Small" Icon="@Icons.Material.Rounded.Remove"></MudIconButton>
                                         <MudIconButton OnClick="()=>EditStation(station)" Size="MudBlazor.Size.Small" Icon="@Icons.Material.Rounded.Edit"></MudIconButton>
                                         <MudIconButton OnClick="()=>OpenQueryStatesView(station)" Size="MudBlazor.Size.Small" Icon="@Icons.Material.Rounded.TableRows"></MudIconButton>
                                     </div>
@@ -154,6 +151,7 @@
                                     <MudSpacer></MudSpacer>
                                     <div class="d-flex gap-4">
                                         <MudButton OnClick="()=>ToggleStation(station)" Variant="Variant.Outlined">Ki/Be</MudButton>
+                                        <MudIconButton OnClick="()=>RemoveStation(station)" Size="MudBlazor.Size.Small" Icon="@Icons.Material.Rounded.Remove"></MudIconButton>
 
                                         <MudIconButton OnClick="()=>EditStation(station)" Size="MudBlazor.Size.Small" Icon="@Icons.Material.Rounded.Edit"></MudIconButton>
 
@@ -206,10 +204,13 @@
                                     <MudChip T="string" Class="ml-2" Style="margin:0px;padding:6px; height:25px;" Size="MudBlazor.Size.Small"><strong>rack @station.Rack</strong></MudChip>
                                     <MudChip T="string" Class="ml-2" Style="margin:0px;padding:6px; height:25px;" Size="MudBlazor.Size.Small"><strong>slot @station.Slot</strong></MudChip>
                                     <MudChip T="string" Class="ml-2" Style="margin:0px;padding:6px; height:25px;" Size="MudBlazor.Size.Small"><strong>loop @station.Loop</strong></MudChip>
+                                    <MudChip T="string" Class="ml-2" Style="margin:0px;padding:6px; height:25px;" Size="MudBlazor.Size.Small"><strong>PcIp @station.StationPcIp</strong></MudChip>
                                     <MudChip T="string" Class="ml-2" Style="margin:0px;padding:6px; height:25px;" Size="MudBlazor.Size.Small"><strong># @station.Id</strong></MudChip>
+
                                     <MudSpacer></MudSpacer>
                                     <div class="d-flex gap-4">
                                         <MudButton OnClick="()=>ToggleStation(station)" Variant="Variant.Outlined">Ki/Be</MudButton>
+                                        <MudIconButton OnClick="()=>RemoveStation(station)" Size="MudBlazor.Size.Small" Icon="@Icons.Material.Rounded.Remove"></MudIconButton>
 
                                         <MudIconButton OnClick="()=>EditStation(station)" Size="MudBlazor.Size.Small" Icon="@Icons.Material.Rounded.Edit"></MudIconButton>
 
@@ -360,7 +361,7 @@
         {
             StationService.AddStation(st);
             Snackbar.Add("Állomás hozzáadva", Severity.Info);
-            _groups = PalettaControl.GetPlcStationGroups();
+            Load();
             await InvokeAsync(StateHasChanged);
         }
         catch (Exception ex)
@@ -419,8 +420,29 @@
         {
             StationService.ModifyStation(st);
             Snackbar.Add("Állomás módosítva", Severity.Info);
-            _groups = PalettaControl.GetPlcStationGroups();
+            Load();
             await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            LogService.LogException(ex);
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+    private async Task RemoveStation(Station station)
+    {
+        try
+        {
+            var result = await Dialog.ShowMessageBox(
+                "Biztosan törlöd?",
+                "",
+                "Törlés", cancelText: "Mégsem");
+            if (result == true)
+            {
+                StationService.RemoveStation(station);
+                Load();
+                await InvokeAsync(StateHasChanged);
+            }
         }
         catch (Exception ex)
         {
@@ -438,6 +460,11 @@
     }
     private async Task ImportCSV(IBrowserFile file)
     {
+        if (file.Size > (1024 * 1024 * 5))
+        {
+            Snackbar.Add("Túl nagy file méret", Severity.Warning);
+            return;
+        }
         var stream = file.OpenReadStream();
         byte[] buffer = new byte[file.Size];
         try
@@ -508,7 +535,7 @@
                     DB = Convert.ToInt32(parts[5]),
                     StationType = type,
                     IsStationOn = true,
-                    StationPcIp = StationType.Eks == type ? parts[7] : null
+                    StationPcIp = StationType.Eks == type ? parts[7].Trim() : null
                 });
         }
     }

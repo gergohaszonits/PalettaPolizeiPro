@@ -32,7 +32,7 @@ namespace PalettaPolizeiPro.Services.Stations
         {
             using (var context = new DatabaseContext())
             {
-                return context.Stations.FirstOrDefault(predicate);
+                return context.Stations.AsNoTracking().FirstOrDefault(predicate);
             }
         }
 
@@ -40,7 +40,7 @@ namespace PalettaPolizeiPro.Services.Stations
         {
             using (var context = new DatabaseContext())
             {
-                return context.Stations.OrderBy(x => x.Name).ToList();
+                return context.Stations.AsNoTracking().OrderBy(x => x.Name).ToList();
             }
         }
 
@@ -48,22 +48,21 @@ namespace PalettaPolizeiPro.Services.Stations
         {
             using (var context = new DatabaseContext())
             {
-                return context.Stations.OrderBy(x=>x.Name).Where(predicate).ToList();
+                return context.Stations.AsNoTracking().OrderBy(x=>x.Name).Where(predicate).ToList();
             }
         }
 
         public void ModifyStation(Station station)
         {
-            Console.WriteLine(station.Id);
             using (var context = new DatabaseContext())
             {
                 context.Entry(station).State = EntityState.Modified;
+                context.SaveChanges();
                 OnStationChange.Invoke(this, new StationsChangedArgs
                 {
                     State = ChangeState.Modified,
                     Station = station
                 });
-                context.SaveChanges();
             }
         }
 
@@ -72,12 +71,12 @@ namespace PalettaPolizeiPro.Services.Stations
             using (var context = new DatabaseContext())
             {
                 context.Stations.Remove(station);
+                context.SaveChanges();
                 OnStationChange.Invoke(this, new StationsChangedArgs
                 {
                     State = ChangeState.Removed,
                     Station = station
                 });
-                context.SaveChanges();
             }
         }
     }

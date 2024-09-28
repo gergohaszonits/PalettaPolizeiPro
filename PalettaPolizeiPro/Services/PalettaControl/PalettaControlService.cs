@@ -1,12 +1,15 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Identity.Client;
 using MudBlazor.Extensions;
 using PalettaPolizeiPro.Data;
 using PalettaPolizeiPro.Data.Palettas;
 using PalettaPolizeiPro.Data.Stations;
+using PalettaPolizeiPro.Database;
 using PalettaPolizeiPro.Services.PLC;
 using PalettaPolizeiPro.Services.Stations;
 using Sharp7;
+using System;
 using System.Collections.Concurrent;
 using static System.Collections.Specialized.BitVector32;
 
@@ -63,6 +66,7 @@ namespace PalettaPolizeiPro.Services.PalettaControl
             var plc = FindPlcFromStation(station);
             if (!plc.IsConnected)
             {
+                PropertyCache[station] = null;
                 return null;
             }
             byte[] buffer = plc.GetBytes(station.DB, 0, 16);
@@ -118,7 +122,7 @@ namespace PalettaPolizeiPro.Services.PalettaControl
             };
 
             QueryCache[station] = query;
-          
+
             return query;
         }
         public void PalettaGo(Station station)
@@ -191,12 +195,12 @@ namespace PalettaPolizeiPro.Services.PalettaControl
                         try
                         {
                             plc.Disconnect();
+                            _plcs.Remove(key, out plc);
                         }
                         catch (Exception ex) { LogService.LogException(ex); }
                     }
                 }
                 _stations.Remove(station);
-                _plcs.Remove(key, out plc);
             }
         }
         private IPLCLayer? FindPlcFromStation(Station station)
@@ -331,6 +335,105 @@ namespace PalettaPolizeiPro.Services.PalettaControl
             return q;
         }
 
+        public List<Paletta> GetPalettas()
+        {
+            using (var context = new DatabaseContext())
+            {
+                return context.Palettas.AsNoTracking().Include(x => x.OrderPalettaFinishes).Include(x => x.OrderPalettaSchedules).Include(x => x.OrderPalettaFinishes).Include(x => x.OrderPalettaSchedules).Include(x => x.InFinished).Include(x => x.Properties).Include(x => x.InScheduled).ToList();
+            }
+        }
 
+        public List<Paletta> GetPalettas(Func<Paletta, bool> predicate)
+        {
+            using (var context = new DatabaseContext())
+            {
+                return context.Palettas.AsNoTracking()
+                    .Include(x => x.OrderPalettaFinishes).Include(x => x.OrderPalettaSchedules)
+                    .Include(x => x.InFinished)
+                    .Include(x => x.InScheduled)
+                    .Include(x => x.Properties)
+                    .Where(predicate)
+                    .ToList();
+            }
+        }
+
+        public List<PalettaProperty> GetPalettaProperties()
+        {
+            using (var context = new DatabaseContext())
+            {
+                return context.PalettaProperties.AsNoTracking().OrderByDescending(x => x.ReadTime).ToList();
+            }
+        }
+
+        public List<PalettaProperty> GetPalettaProperties(Func<PalettaProperty, bool> predicate)
+        {
+            using (var context = new DatabaseContext())
+            {
+                return context.PalettaProperties.AsNoTracking().OrderByDescending(x => x.ReadTime).Where(predicate).ToList();
+            }
+        }
+
+        public List<Paletta> GetPalettasWithLastProperty(Func<Paletta, bool> predicate)
+        {
+            using (var context = new DatabaseContext())
+            {
+                return context.Palettas.AsNoTracking()
+                    .Include(x => x.InFinished)
+                    .Include(x => x.OrderPalettaFinishes).Include(x => x.OrderPalettaSchedules)
+                    .Include(x => x.InScheduled)
+                    .Select(p => new Paletta
+                    {
+                        Id = p.Id,
+                        Identifier = p.Identifier,
+                        InFinished = p.InFinished,
+                        InScheduled = p.InScheduled,
+                        Loop = p.Loop,
+                        Marked = p.Marked,
+                        PalettaError = p.PalettaError,
+                        ServiceFlag = p.ServiceFlag,
+                        Properties = p.Properties
+                                      .OrderByDescending(prop => prop.ReadTime)
+                                      .Take(1)
+                                      .ToList()
+                    })
+                    .Where(predicate)
+                    .ToList();
+            }
+        }
+
+        public List<Paletta> GetPalettasWithLastProperty()
+        {
+            using (var context = new DatabaseContext())
+            {
+                return context.Palettas.AsNoTracking()
+                    .Include(x => x.InFinished)
+                    .Include(x => x.InScheduled)
+                    .Include(x => x.OrderPalettaFinishes).Include(x => x.OrderPalettaSchedules)
+                    .Select(p => new Paletta
+                    {
+                        Id = p.Id,
+                        Identifier = p.Identifier,
+                        InFinished = p.InFinished,
+                        InScheduled = p.InScheduled,
+                        Loop = p.Loop,
+                        Marked = p.Marked,
+                        PalettaError = p.PalettaError,
+                        ServiceFlag = p.ServiceFlag,
+                        Properties = p.Properties
+                                      .OrderByDescending(prop => prop.ReadTime)
+                                      .Take(1)
+                                      .ToList()
+                    })
+                    .ToList();
+            }
+        }
+        public void CreatePaletta(Paletta paletta)
+        {
+            using (var context = new DatabaseContext())
+            {
+                context.Palettas.Add(paletta);
+                context.SaveChanges();
+            }
+        }
     }
 }

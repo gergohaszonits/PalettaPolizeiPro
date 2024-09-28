@@ -13,44 +13,56 @@ public static class LogService
         _consoleLogging = enableConsoleLog;
         _folder = folder;
     }
-
     public static void Log(object? log, LogLevel level = LogLevel.Information)
     {
         Task.Run(() =>
         {
             lock (_myLock)
             {
-                if (_folder is null)
+                FileStream s = null;
+                try
                 {
-                    throw new NullReferenceException();
-                }
+                    if (_folder is null)
+                    {
+                        throw new NullReferenceException();
+                    }
 
-                if (!Directory.Exists(_folder))
-                {
-                    Directory.CreateDirectory(_folder);
-                }
+                    if (!Directory.Exists(_folder))
+                    {
+                        Directory.CreateDirectory(_folder);
+                    }
 
-                string path = Path.Combine(_folder, DateTime.Now.ToString("yyyy_MM_dd") + ".txt");
-                string writable = $"[{DateTime.Now}] [{level.ToString()}] {log}\n";
-                FileStream stream;
-                if (!File.Exists(path))
-                {
-                    stream = File.Create(path);
-                }
-                else
-                {
-                    stream = File.OpenWrite(path);
-                }
+                    string path = Path.Combine(_folder, DateTime.Now.ToString("yyyy_MM_dd") + ".txt");
+                    string writable = $"[{DateTime.Now}] [{level.ToString()}] {log}\n";
+                    FileStream stream;
+                    if (!File.Exists(path))
+                    {
+                        stream = File.Create(path);
+                    }
+                    else
+                    {
+                        stream = File.OpenWrite(path);
+                    }
+                    s = stream;
+                    long endPoint = stream.Length;
+                    stream.Seek(endPoint, SeekOrigin.Begin);
+                    byte[] toWrite = new UTF8Encoding(true).GetBytes(writable);
+                    stream.Write(toWrite, 0, toWrite.Length);
+                    stream.Close();
+                    stream.Dispose();
 
-                long endPoint = stream.Length;
-                stream.Seek(endPoint, SeekOrigin.Begin);
-                byte[] toWrite = new UTF8Encoding(true).GetBytes(writable);
-                stream.Write(toWrite, 0, toWrite.Length);
-                stream.Dispose();
-
-                if (_consoleLogging)
+                    if (_consoleLogging)
+                    {
+                        LogToConsole(writable, level);
+                    }
+                }
+                catch 
                 {
-                    LogToConsole(writable, level);
+                    if (s is not null)
+                    { 
+                        s.Close();
+                        s.Dispose();
+                    }
                 }
             }
         });

@@ -1,0 +1,173 @@
+﻿@page "/orders"
+@using PalettaPolizeiPro.Data.Palettas
+@using PalettaPolizeiPro.Dialogs
+@using PalettaPolizeiPro.Services.Orders
+
+<MudContainer Class="d-flex flex-column gap-4">
+    <div>
+        <MudIconButton OnClick="AddOrder" Variant="Variant.Filled" Size="MudBlazor.Size.Medium" Icon="@Icons.Material.Rounded.Add" />
+    </div>
+
+    <MudStack>
+        @foreach (var order in _orders)
+        {
+            string opacity = order.Status == OrderStatus.Sorting || order.Status == OrderStatus.Scheduled ? "" : "opacity:0.5";
+            <MudPaper Style="@opacity" Class="d-flex flex-column gap-0" Elevation="20">
+                <MudToolBar>
+                    @if (order.User.Eks is not null)
+                    {
+                        <MudChip Icon="@Icons.Material.Rounded.Person" Color="Color.Primary" T="string">@order.User.Username - @order.User.Eks.WorkerId</MudChip>
+                    }
+                    else
+                    {
+                        <MudChip Icon="@Icons.Material.Rounded.Person" Color="Color.Primary" T="string">@order.User.Username</MudChip>
+                    }
+                    <MudChip Icon="@Icons.Material.Rounded.Timer" Color="Color.Surface" T="string">@order.ScheduledTime</MudChip>
+                    <MudChip Icon="@Icons.Material.Rounded.DateRange" Color="Color.Secondary" T="string">@order.StartSortTime - @order.EndSortTime</MudChip>
+                    <MudSpacer></MudSpacer>
+
+                    @{
+                        MudBlazor.Color scolor;
+                        if (order.Status == OrderStatus.Success)
+                        {
+                            scolor = Color.Success;
+                        }
+                        else if (order.Status == OrderStatus.Sorting)
+                        {
+                            scolor = Color.Secondary;
+                        }
+                        else if (order.Status == OrderStatus.Scheduled)
+                        {
+                            scolor = Color.Primary;
+                        }
+                        else if (order.Status == OrderStatus.Failed)
+                        {
+                            scolor = Color.Error;
+                        }
+                        else if (order.Status == OrderStatus.Cancelled)
+                        {
+                            scolor = Color.Warning;
+                        }
+                        else
+                        {
+                            scolor = Color.Surface;    
+                        }
+                    }
+
+                    @if (order.FinishedTime is not null)
+                    {
+                        <MudChip Icon="@Icons.Material.Rounded.DateRange" Color="Color.Info" T="string">@order.FinishedTime</MudChip>
+                    }
+                    <MudChip Icon="@Icons.Material.Rounded.Info" Color="scolor" T="string">@order.Status</MudChip>
+                    @if ((order.Status == OrderStatus.Sorting || order.Status == OrderStatus.Scheduled) && (MyClient.User!.Id == order.User.Id || MyClient.User!.Role == Role.Admin))
+                    {
+                        <MudIconButton OnClick="()=>CloseOrder(order)" Icon="@Icons.Material.Filled.Close"></MudIconButton>
+                    }
+                </MudToolBar>
+                @if (order.InfoText is not null)
+                {
+                    <MudToolBar Style="background-color:dimgrey;color:aliceblue;margin:10px;border-radius:10px;">
+                        <MudText Typo="Typo.subtitle2">@order.InfoText</MudText>
+                    </MudToolBar>
+                }
+                <MudToolBar>
+                    @foreach (var paletta in order.ScheduledPalettas)
+                    {
+                        MudBlazor.Color color = order.FinishedPalettas.FirstOrDefault(x=>x.Id == paletta.Id) is not null ? Color.Success : Color.Surface;
+                        <MudChip Color="color" T="string">@paletta.Identifier</MudChip>
+                    }
+                </MudToolBar>
+            </MudPaper>
+        }
+    </MudStack>
+</MudContainer>
+
+@code {
+
+    List<Order> _orders;
+
+
+    protected override void OnInitialized()
+    {
+        Load();
+        OrderService.OrdersChanged += OnOrderChange;
+    }
+    private void Load()
+    {
+        _orders = OrdersSerivce.GetAll();
+    }
+    private async Task AddOrder()
+    {
+        var dialog = await Dialog.ShowAsync<OrderEditorDialog>("Kisorolás hozzáadása", new DialogOptions
+            {
+                CloseButton = true,
+                CloseOnEscapeKey = true,
+                MaxWidth = MaxWidth.ExtraExtraLarge,
+                FullScreen = true
+
+            });
+        var result = await dialog.Result;
+        Order? order = (Order?)result.Data;
+        if (order is null) { return; }
+        try
+        {
+            OrdersSerivce.AddOrUpdate(order);
+            Snackbar.Add("Kisorolás hozzáadva", Severity.Info);
+        }
+        catch (Exception ex)
+        {
+            LogService.LogException(ex);
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+    private void OnOrderChange(object? sender, OrderEventArgs args)
+    {
+        if (args.State == ChangeState.Added)
+        {
+            _orders.Insert(0, args.Order);
+        }
+        else if (args.State == ChangeState.Removed)
+        {
+            _orders.RemoveAll(x => x.Id == args.Order.Id);
+        }
+        else if (args.State == ChangeState.Modified)
+        {
+            var index = _orders.FindIndex(x => x.Id == args.Order.Id);
+            if (index != -1)
+            {
+                _orders[index] = args.Order;
+            }
+        }
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task CloseOrder(Order order)
+    {
+        try
+        {
+            var result = await Dialog.ShowMessageBox(
+                "Biztosan törlöd?",
+                "",
+                "Törlés", cancelText: "Mégsem");
+            if (result == true)
+            {
+                //XD
+                order.FinishedTime = DateTime.Now;
+                order.Status = OrderStatus.Cancelled;
+                OrdersSerivce.AddOrUpdate(order);
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (Exception ex)
+        {
+            LogService.LogException(ex);
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+    @implements IDisposable
+    public void Dispose()
+    {
+        OrderService.OrdersChanged -= OnOrderChange;
+        GC.Collect();
+    }
+}

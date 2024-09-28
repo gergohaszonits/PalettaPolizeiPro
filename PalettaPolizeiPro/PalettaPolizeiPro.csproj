@@ -24,7 +24,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="MudBlazor" Version="7.8.0" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.4" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.8" />
     <PackageReference Include="Sharp7" Version="1.1.84" />
   </ItemGroup>
 
@@ -34,7 +34,6 @@
 
   <ItemGroup>
     <Folder Include="Logs\" />
-    <Folder Include="Services\Orders\" />
   </ItemGroup>
 
 </Project>

@@ -9,6 +9,7 @@ namespace PalettaPolizeiPro.Data.Users
         public required string Password { get; set; }
         public string? WorkerID { get; set; }
         public required Role Role { get; set; }
+        public long? EksId { get; set; }
         public Eks? Eks { get; set; }
 
     }

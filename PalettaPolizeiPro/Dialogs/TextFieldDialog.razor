@@ -1,0 +1,48 @@
+﻿<MudDialog>
+    <DialogContent>
+        <MudTextField MaxLength="MaxChars" T="string" @bind-Value="Text"  Variant="Variant.Filled" Lines="Lines"/>
+    </DialogContent>
+    <DialogActions>
+        @if (_editMode)
+        {
+            <MudButton Color="Color.Primary" OnClick="Submit">Módosít</MudButton>
+        }
+        else
+        {
+            <MudButton Color="Color.Primary" OnClick="Submit">Mentés</MudButton>
+        }
+    </DialogActions>
+</MudDialog>
+@code {
+    [CascadingParameter] MudDialogInstance? ThisDialog { get; set; }
+
+    [Parameter]
+    public string? Text { get; set; }
+
+    [Parameter]
+    public required int MaxChars { get; set; }
+    [Parameter]
+    public required int Lines { get; set; }
+
+
+    private bool _editMode = false;
+
+    protected override void OnInitialized()
+    {
+        if (!string.IsNullOrWhiteSpace(Text))
+        {
+            _editMode = true;     
+        }
+    }
+    private void Submit()
+    {
+        if (string.IsNullOrWhiteSpace(Text))
+        {
+            ThisDialog!.Close(null);
+        }
+        else
+        {
+            ThisDialog!.Close(Text);
+        }
+    }
+}

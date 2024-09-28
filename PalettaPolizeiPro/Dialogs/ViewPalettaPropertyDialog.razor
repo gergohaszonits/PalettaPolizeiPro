@@ -1,5 +1,5 @@
 ﻿@using Microsoft.AspNetCore.Mvc
-@using PalettaPolizeiPro.Data.Events
+@using PalettaPolizeiPro.Data.LineEvents
 @using PalettaPolizeiPro.Data.Stations
 @using System.Text
 @implements IDisposable
@@ -30,7 +30,7 @@
 </style>
 <MudTable Items="@_values" Filter="new Func<CheckEventArgs,bool>(FilterFunc)" Dense="true" Hover="true" Bordered="true" Striped="true">
     <ToolBarContent>
-        <MudIconButton OnClick="ExportToCSV" Icon="@Icons.Material.Rounded.Download"></MudIconButton>
+        <MudButton Variant="Variant.Outlined" OnClick="ExportToCSV" StartIcon="@Icons.Material.Rounded.Download">Exportálás</MudButton>
         <MudSpacer />
         <MudTextField @bind-Value="searchString" Placeholder="Paletta keresés" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="MudBlazor.Size.Medium" Class="mt-0"></MudTextField>
     </ToolBarContent>
@@ -85,8 +85,8 @@
 
     protected override void OnInitialized()
     {
-        EventService.CheckEvent += OnValueChange;
         Load();
+        EventService.CheckEvent += OnValueChange;
     }
 
     void IDisposable.Dispose()

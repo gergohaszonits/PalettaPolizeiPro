@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using PalettaPolizeiPro.Data.Events;
+using PalettaPolizeiPro.Data.LineEvents;
 using PalettaPolizeiPro.Database;
 
 namespace PalettaPolizeiPro.Services.Events
@@ -26,10 +26,10 @@ namespace PalettaPolizeiPro.Services.Events
         {
             using (var context = new DatabaseContext())
             {
-                return context.CheckEvents.OrderByDescending(x=>x.Time).Include(x => x.Station).Include(x => x.Property).ToList();
+                return context.CheckEvents.OrderByDescending(x => x.Time).Include(x => x.Station).Include(x => x.Property).ToList();
             }
         }
-        public List<CheckEventArgs> GetCheckEvents(Func<CheckEventArgs,bool> predicate)
+        public List<CheckEventArgs> GetCheckEvents(Func<CheckEventArgs, bool> predicate)
         {
             using (var context = new DatabaseContext())
             {
@@ -67,43 +67,89 @@ namespace PalettaPolizeiPro.Services.Events
 
         public Task NewQueryEvent(QueryEventArgs e)
         {
-            return Task.Run(() => 
+            return Task.Run(() =>
             {
-                using (var context = new DatabaseContext())
+                try
                 {
-                    context.QueryEvents.Add(e);
-                    context.SaveChanges();
-                    LastQueryEvent = e;
-                    QueryEvent.Invoke(this,e);                   
-                }     
+                    using (var context = new DatabaseContext())
+                    {
+                        var paletta = context.Palettas.FirstOrDefault(x => x.Identifier == e.State.PalettaName);
+                        if (paletta is null)
+                        {
+                            paletta = new Data.Palettas.Paletta
+                            {
+                                Identifier = e.State.PalettaName,
+                                Loop = e.Station.Loop,
+                            };
+                            context.Palettas.Add(paletta); // mentunk hogy kapjon ID t az entitiytol
+                            context.SaveChanges();
+
+                        }
+
+                        e.State.PalettaId = paletta.Id;
+                        e.Station = null;
+                        context.QueryEvents.Add(e);
+                        context.SaveChanges();
+                        var temp = e.Station;
+                        e.Station = temp;
+
+                        LastQueryEvent = e;
+                        QueryEvent.Invoke(this, e);
+                    }
+                }
+                catch (Exception ex) { LogService.LogException(ex); }
             });
         }
         public Task NewCheckEvent(CheckEventArgs e)
         {
-            return Task.Run(() => 
+            return Task.Run(() =>
             {
-                using (var context = new DatabaseContext())
+                try
                 {
-                    context.CheckEvents.Add(e);
-                    context.SaveChanges();
-                    LastCheckEvent  = e;
-                    CheckEvent.Invoke(this, e);
-                }
+                    using (var context = new DatabaseContext())
+                    {
+                        var paletta = context.Palettas.FirstOrDefault(x => x.Identifier == e.Property.Identifier);
+                        if (paletta is null)
+                        {
+                            paletta = new Data.Palettas.Paletta
+                            {
+                                Identifier = e.Property.Identifier,
+                                Loop = e.Station.Loop,
 
+                            };
+                            context.Palettas.Add(paletta); // mentunk hogy kapjon ID t az entitiytol
+                            context.SaveChanges();
+
+                        }
+
+                        e.Property.PalettaId = paletta.Id;
+                        var temp = e.Station;
+                        e.Station = null;
+                        context.CheckEvents.Add(e);
+                        context.SaveChanges();
+                        e.Station = temp;
+                        LastCheckEvent = e;
+                        CheckEvent.Invoke(this, e);
+                    }
+                }
+                catch (Exception ex) { LogService.LogException(ex); }
             });
         }
         public Task NewEksEvent(EksEventArgs e)
         {
-            return Task.Run(() => 
+            return Task.Run(() =>
             {
-                using (var context = new DatabaseContext())
+                try
                 {
-                    context.EksEvents.Add(e);
-                    context.SaveChanges();
-                    LastEksEvent = e;
-                    EksEvent.Invoke(this, e);
+                    using (var context = new DatabaseContext())
+                    {
+                        context.EksEvents.Add(e);
+                        context.SaveChanges();
+                        LastEksEvent = e;
+                        EksEvent.Invoke(this, e);
+                    }
                 }
-
+                catch (Exception ex) { LogService.LogException(ex); }
             });
 
         }

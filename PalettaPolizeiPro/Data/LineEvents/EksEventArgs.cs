@@ -1,7 +1,7 @@
 ﻿using PalettaPolizeiPro.Data.EKS;
 using PalettaPolizeiPro.Data.Stations;
 
-namespace PalettaPolizeiPro.Data.Events
+namespace PalettaPolizeiPro.Data.LineEvents
 {
     public class EksEventArgs : EntityObject
     {

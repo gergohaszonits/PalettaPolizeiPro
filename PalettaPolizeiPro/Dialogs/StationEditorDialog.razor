@@ -29,7 +29,7 @@
                 <MudNumericField Min="0" Variant="Variant.Outlined" @bind-Value="_stationLoop" Label="Kör"></MudNumericField>
                 @if (_stationType == StationType.Eks)
                 {
-                    <MudTextField Variant="Variant.Outlined" @bind-Value="_stationPcIp" Label="PC ip"></MudTextField>
+                    <MudTextField Lines="3" Variant="Variant.Outlined" @bind-Value="_stationPcIp" Label="PC ips"></MudTextField>
                 }
             </div>
         </div>
@@ -37,9 +37,12 @@
     <DialogActions>
         @if (_editMode)
         {
-            <MudButton Color="Color.Error" OnClick="Delete">Törlés</MudButton>
+            <MudButton Color="Color.Primary" OnClick="Submit">Módosít</MudButton>
         }
-        <MudButton Color="Color.Primary" OnClick="Submit">Mentés</MudButton>
+        else
+        {
+            <MudButton Color="Color.Primary" OnClick="Submit">Mentés</MudButton>
+        }
     </DialogActions>
 </MudDialog>
 @code {
@@ -136,7 +139,8 @@
                     IsStationOn = true,
                     Loop = _stationLoop,
                     StationType = _stationType,
-                    Id = _stationId
+                    Id = _stationId,
+                    StationPcIp = _stationPcIp
                 });
         }
         catch (Exception ex)
@@ -212,9 +216,4 @@
 
         return true;
     }
-    private void Delete()
-    {
-        
-    }
-
 }

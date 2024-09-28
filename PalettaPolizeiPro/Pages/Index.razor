@@ -1,7 +1,35 @@
 ﻿@page "/"
+@using PalettaPolizeiPro.Components
 
+<MudContainer Class="mud-width-full pa-6" Style="height:80vh; overflow-y:scroll">
+    <MudGrid style="margin-bottom:15px;" Justify="Justify.SpaceEvenly">
+        <MudChip T="string">% : Paletta szerviz igény</MudChip>
+        <MudChip T="string">KM : Kisorolásra megjelölt</MudChip>
+        <MudChip T="string">K : Kisorolva</MudChip>
+        <MudChip T="string">HP :Hibás paletta</MudChip>
+    </MudGrid>
+    <MudDivider style="margin-bottom:15px" DividerType="DividerType.Inset"></MudDivider>
 
+    <MudGrid Style="row-gap:10px;column-gap:10px;padding:0px" Justify="Justify.SpaceEvenly">
+        @foreach (var loop in _loops)
+        {
+            <MudItem Style="width:550px;height:350px">
+                <LoopBarChart Loop="loop"></LoopBarChart>
+            </MudItem>
+        }
+    </MudGrid>
+</MudContainer>
 
 @code
 {
+    List<int> _loops;
+
+    protected override void OnInitialized()
+    {
+        using (var context = new DatabaseContext())
+        {
+            _loops = context.Palettas.Select(x => x.Loop).Distinct().ToList();
+            _loops.Sort();
+        }
+    }
 }

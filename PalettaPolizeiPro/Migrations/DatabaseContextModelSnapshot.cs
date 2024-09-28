@@ -22,36 +22,6 @@ namespace PalettaPolizeiPro.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("OrderPaletta", b =>
-                {
-                    b.Property<long>("InScheduledId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("ScheduledPalettasId")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("InScheduledId", "ScheduledPalettasId");
-
-                    b.HasIndex("ScheduledPalettasId");
-
-                    b.ToTable("OrderPaletta");
-                });
-
-            modelBuilder.Entity("OrderPaletta1", b =>
-                {
-                    b.Property<long>("FinishedPalettasId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("InFinishedId")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("FinishedPalettasId", "InFinishedId");
-
-                    b.HasIndex("InFinishedId");
-
-                    b.ToTable("OrderPaletta1");
-                });
-
             modelBuilder.Entity("PalettaPolizeiPro.Data.EKS.Eks", b =>
                 {
                     b.Property<long>("Id")
@@ -73,7 +43,7 @@ namespace PalettaPolizeiPro.Migrations
                     b.ToTable("Eks");
                 });
 
-            modelBuilder.Entity("PalettaPolizeiPro.Data.Events.CheckEventArgs", b =>
+            modelBuilder.Entity("PalettaPolizeiPro.Data.LineEvents.CheckEventArgs", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -99,7 +69,7 @@ namespace PalettaPolizeiPro.Migrations
                     b.ToTable("CheckEvents");
                 });
 
-            modelBuilder.Entity("PalettaPolizeiPro.Data.Events.EksEventArgs", b =>
+            modelBuilder.Entity("PalettaPolizeiPro.Data.LineEvents.EksEventArgs", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -128,7 +98,7 @@ namespace PalettaPolizeiPro.Migrations
                     b.ToTable("EksEvents");
                 });
 
-            modelBuilder.Entity("PalettaPolizeiPro.Data.Events.QueryEventArgs", b =>
+            modelBuilder.Entity("PalettaPolizeiPro.Data.LineEvents.QueryEventArgs", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -193,6 +163,52 @@ namespace PalettaPolizeiPro.Migrations
                     b.ToTable("Orders");
                 });
 
+            modelBuilder.Entity("PalettaPolizeiPro.Data.Palettas.OrderPalettaFinished", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("OrderId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("PalettaId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("PalettaId");
+
+                    b.ToTable("OrderPalettaFinishes");
+                });
+
+            modelBuilder.Entity("PalettaPolizeiPro.Data.Palettas.OrderPalettaScheduled", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("OrderId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("PalettaId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("PalettaId");
+
+                    b.ToTable("OrderPalettaSchedules");
+                });
+
             modelBuilder.Entity("PalettaPolizeiPro.Data.Palettas.Paletta", b =>
                 {
                     b.Property<long>("Id")
@@ -203,6 +219,9 @@ namespace PalettaPolizeiPro.Migrations
 
                     b.Property<string>("Identifier")
                         .HasColumnType("text");
+
+                    b.Property<bool>("IsOut")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("Loop")
                         .HasColumnType("integer");
@@ -239,7 +258,7 @@ namespace PalettaPolizeiPro.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<long?>("PalettaId")
+                    b.Property<long>("PalettaId")
                         .HasColumnType("bigint");
 
                     b.Property<int>("PredefiniedCycle")
@@ -379,37 +398,7 @@ namespace PalettaPolizeiPro.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("OrderPaletta", b =>
-                {
-                    b.HasOne("PalettaPolizeiPro.Data.Palettas.Order", null)
-                        .WithMany()
-                        .HasForeignKey("InScheduledId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("PalettaPolizeiPro.Data.Palettas.Paletta", null)
-                        .WithMany()
-                        .HasForeignKey("ScheduledPalettasId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("OrderPaletta1", b =>
-                {
-                    b.HasOne("PalettaPolizeiPro.Data.Palettas.Paletta", null)
-                        .WithMany()
-                        .HasForeignKey("FinishedPalettasId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("PalettaPolizeiPro.Data.Palettas.Order", null)
-                        .WithMany()
-                        .HasForeignKey("InFinishedId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("PalettaPolizeiPro.Data.Events.CheckEventArgs", b =>
+            modelBuilder.Entity("PalettaPolizeiPro.Data.LineEvents.CheckEventArgs", b =>
                 {
                     b.HasOne("PalettaPolizeiPro.Data.Palettas.PalettaProperty", "Property")
                         .WithMany()
@@ -428,7 +417,7 @@ namespace PalettaPolizeiPro.Migrations
                     b.Navigation("Station");
                 });
 
-            modelBuilder.Entity("PalettaPolizeiPro.Data.Events.EksEventArgs", b =>
+            modelBuilder.Entity("PalettaPolizeiPro.Data.LineEvents.EksEventArgs", b =>
                 {
                     b.HasOne("PalettaPolizeiPro.Data.EKS.Eks", "Eks")
                         .WithMany()
@@ -447,7 +436,7 @@ namespace PalettaPolizeiPro.Migrations
                     b.Navigation("Station");
                 });
 
-            modelBuilder.Entity("PalettaPolizeiPro.Data.Events.QueryEventArgs", b =>
+            modelBuilder.Entity("PalettaPolizeiPro.Data.LineEvents.QueryEventArgs", b =>
                 {
                     b.HasOne("PalettaPolizeiPro.Data.Palettas.QueryState", "State")
                         .WithMany()
@@ -477,11 +466,53 @@ namespace PalettaPolizeiPro.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("PalettaPolizeiPro.Data.Palettas.OrderPalettaFinished", b =>
+                {
+                    b.HasOne("PalettaPolizeiPro.Data.Palettas.Order", "Order")
+                        .WithMany("OrderPalettaFinishes")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PalettaPolizeiPro.Data.Palettas.Paletta", "Paletta")
+                        .WithMany("OrderPalettaFinishes")
+                        .HasForeignKey("PalettaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Paletta");
+                });
+
+            modelBuilder.Entity("PalettaPolizeiPro.Data.Palettas.OrderPalettaScheduled", b =>
+                {
+                    b.HasOne("PalettaPolizeiPro.Data.Palettas.Order", "Order")
+                        .WithMany("OrderPalettaSchedules")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PalettaPolizeiPro.Data.Palettas.Paletta", "Paletta")
+                        .WithMany("OrderPalettaSchedules")
+                        .HasForeignKey("PalettaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Paletta");
+                });
+
             modelBuilder.Entity("PalettaPolizeiPro.Data.Palettas.PalettaProperty", b =>
                 {
-                    b.HasOne("PalettaPolizeiPro.Data.Palettas.Paletta", null)
+                    b.HasOne("PalettaPolizeiPro.Data.Palettas.Paletta", "Paletta")
                         .WithMany("Properties")
-                        .HasForeignKey("PalettaId");
+                        .HasForeignKey("PalettaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Paletta");
                 });
 
             modelBuilder.Entity("PalettaPolizeiPro.Data.Palettas.QueryState", b =>
@@ -502,8 +533,19 @@ namespace PalettaPolizeiPro.Migrations
                     b.Navigation("Eks");
                 });
 
+            modelBuilder.Entity("PalettaPolizeiPro.Data.Palettas.Order", b =>
+                {
+                    b.Navigation("OrderPalettaFinishes");
+
+                    b.Navigation("OrderPalettaSchedules");
+                });
+
             modelBuilder.Entity("PalettaPolizeiPro.Data.Palettas.Paletta", b =>
                 {
+                    b.Navigation("OrderPalettaFinishes");
+
+                    b.Navigation("OrderPalettaSchedules");
+
                     b.Navigation("Properties");
                 });
 #pragma warning restore 612, 618

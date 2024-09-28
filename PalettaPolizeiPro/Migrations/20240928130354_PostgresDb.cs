@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace PalettaPolizeiPro.Migrations
 {
     /// <inheritdoc />
-    public partial class postgresdb : Migration
+    public partial class PostgresDb : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -36,7 +36,8 @@ namespace PalettaPolizeiPro.Migrations
                     Loop = table.Column<int>(type: "integer", nullable: false),
                     ServiceFlag = table.Column<bool>(type: "boolean", nullable: false),
                     PalettaError = table.Column<bool>(type: "boolean", nullable: false),
-                    Marked = table.Column<bool>(type: "boolean", nullable: false)
+                    Marked = table.Column<bool>(type: "boolean", nullable: false),
+                    IsOut = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -108,11 +109,11 @@ namespace PalettaPolizeiPro.Migrations
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Identifier = table.Column<string>(type: "text", nullable: false),
+                    PalettaId = table.Column<long>(type: "bigint", nullable: false),
                     PredefiniedCycle = table.Column<int>(type: "integer", nullable: false),
                     ActualCycle = table.Column<int>(type: "integer", nullable: false),
                     EngineNumber = table.Column<string>(type: "text", nullable: true),
-                    ReadTime = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
-                    PalettaId = table.Column<long>(type: "bigint", nullable: true)
+                    ReadTime = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -121,7 +122,8 @@ namespace PalettaPolizeiPro.Migrations
                         name: "FK_PalettaProperties_Palettas_PalettaId",
                         column: x => x.PalettaId,
                         principalTable: "Palettas",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -254,48 +256,52 @@ namespace PalettaPolizeiPro.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "OrderPaletta",
+                name: "OrderPalettaFinishes",
                 columns: table => new
                 {
-                    InScheduledId = table.Column<long>(type: "bigint", nullable: false),
-                    ScheduledPalettasId = table.Column<long>(type: "bigint", nullable: false)
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    PalettaId = table.Column<long>(type: "bigint", nullable: false),
+                    OrderId = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_OrderPaletta", x => new { x.InScheduledId, x.ScheduledPalettasId });
+                    table.PrimaryKey("PK_OrderPalettaFinishes", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_OrderPaletta_Orders_InScheduledId",
-                        column: x => x.InScheduledId,
+                        name: "FK_OrderPalettaFinishes_Orders_OrderId",
+                        column: x => x.OrderId,
                         principalTable: "Orders",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_OrderPaletta_Palettas_ScheduledPalettasId",
-                        column: x => x.ScheduledPalettasId,
+                        name: "FK_OrderPalettaFinishes_Palettas_PalettaId",
+                        column: x => x.PalettaId,
                         principalTable: "Palettas",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "OrderPaletta1",
+                name: "OrderPalettaSchedules",
                 columns: table => new
                 {
-                    FinishedPalettasId = table.Column<long>(type: "bigint", nullable: false),
-                    InFinishedId = table.Column<long>(type: "bigint", nullable: false)
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    PalettaId = table.Column<long>(type: "bigint", nullable: false),
+                    OrderId = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_OrderPaletta1", x => new { x.FinishedPalettasId, x.InFinishedId });
+                    table.PrimaryKey("PK_OrderPalettaSchedules", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_OrderPaletta1_Orders_InFinishedId",
-                        column: x => x.InFinishedId,
+                        name: "FK_OrderPalettaSchedules_Orders_OrderId",
+                        column: x => x.OrderId,
                         principalTable: "Orders",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_OrderPaletta1_Palettas_FinishedPalettasId",
-                        column: x => x.FinishedPalettasId,
+                        name: "FK_OrderPalettaSchedules_Palettas_PalettaId",
+                        column: x => x.PalettaId,
                         principalTable: "Palettas",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -322,14 +328,24 @@ namespace PalettaPolizeiPro.Migrations
                 column: "StationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_OrderPaletta_ScheduledPalettasId",
-                table: "OrderPaletta",
-                column: "ScheduledPalettasId");
+                name: "IX_OrderPalettaFinishes_OrderId",
+                table: "OrderPalettaFinishes",
+                column: "OrderId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_OrderPaletta1_InFinishedId",
-                table: "OrderPaletta1",
-                column: "InFinishedId");
+                name: "IX_OrderPalettaFinishes_PalettaId",
+                table: "OrderPalettaFinishes",
+                column: "PalettaId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderPalettaSchedules_OrderId",
+                table: "OrderPalettaSchedules",
+                column: "OrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderPalettaSchedules_PalettaId",
+                table: "OrderPalettaSchedules",
+                column: "PalettaId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Orders_UserId",
@@ -372,10 +388,10 @@ namespace PalettaPolizeiPro.Migrations
                 name: "EksEvents");
 
             migrationBuilder.DropTable(
-                name: "OrderPaletta");
+                name: "OrderPalettaFinishes");
 
             migrationBuilder.DropTable(
-                name: "OrderPaletta1");
+                name: "OrderPalettaSchedules");
 
             migrationBuilder.DropTable(
                 name: "QueryEvents");

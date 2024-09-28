@@ -1,7 +1,7 @@
 ﻿using PalettaPolizeiPro.Data.Palettas;
 using PalettaPolizeiPro.Data.Stations;
 
-namespace PalettaPolizeiPro.Data.Events
+namespace PalettaPolizeiPro.Data.LineEvents
 {
     public class QueryEventArgs : EntityObject
     {
