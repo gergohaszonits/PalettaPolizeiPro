@@ -54,14 +54,14 @@ namespace PalettaPolizeiPro.Services.Events
         {
             using (var context = new DatabaseContext())
             {
-                return context.EksEvents.OrderByDescending(x => x.Time).Include(x => x.Station).Include(x => x.Eks).ToList();
+                return context.EksEvents.OrderByDescending(x => x.Time).Include(x => x.Station).ToList();
             }
         }
         public List<EksEventArgs> GetEksEvents(Func<EksEventArgs, bool> predicate)
         {
             using (var context = new DatabaseContext())
             {
-                return context.EksEvents.OrderByDescending(x => x.Time).Include(x => x.Station).Include(x => x.Eks).Where(predicate).ToList();
+                return context.EksEvents.OrderByDescending(x => x.Time).Include(x => x.Station).Where(predicate).ToList();
             }
         }
 
@@ -87,10 +87,10 @@ namespace PalettaPolizeiPro.Services.Events
                         }
 
                         e.State.PalettaId = paletta.Id;
+                        var temp = e.Station;
                         e.Station = null;
                         context.QueryEvents.Add(e);
                         context.SaveChanges();
-                        var temp = e.Station;
                         e.Station = temp;
 
                         LastQueryEvent = e;
@@ -143,8 +143,11 @@ namespace PalettaPolizeiPro.Services.Events
                 {
                     using (var context = new DatabaseContext())
                     {
+                        var temp = e.Station;
+                        e.Station = null;
                         context.EksEvents.Add(e);
                         context.SaveChanges();
+                        e.Station = temp;
                         LastEksEvent = e;
                         EksEvent.Invoke(this, e);
                     }

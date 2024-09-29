@@ -1,4 +1,5 @@
-﻿<MudDialog @onkeypress="@((e)=>{if(e.Key =="Enter"){Submit();}})">
+﻿@using PalettaPolizeiPro.Data.LineEvents
+<MudDialog @onkeypress="@((e)=>{if(e.Key =="Enter"){Submit();}})">
     <DialogContent>
         <div class="d-flex flex-column gap-5">
             <MudTextField Immediate="true" Variant="Variant.Outlined" Placeholder="Név" @bind-Value="_username"></MudTextField>
@@ -7,10 +8,11 @@
         @if (MyClient.Station is not null)
         {
             <MudButton Color="Color.Success" StartIcon="@Icons.Material.Filled.VpnKey" Disabled="true">EKS belépés engedélyezve</MudButton>
+            <MudText Color="Color.Success">@MyClient.Station.Name</MudText>
         }
         else
         {
-            <MudButton StartIcon="@Icons.Material.Filled.VpnKeyOff" Disabled="true" >EKS kulccsal való belépés nem elérhető</MudButton>
+            <MudButton StartIcon="@Icons.Material.Filled.VpnKeyOff" Disabled="true">EKS kulccsal való belépés nem elérhető</MudButton>
         }
     </DialogContent>
     <DialogActions>
@@ -26,15 +28,47 @@
 
     protected override void OnInitialized()
     {
+
+        var station = StationService.Get(x => x.StationPcIp is not null && x.StationPcIp.Contains(MyClient.Ip!));
+        if (station is not null)
+        {
+            MyClient.Station = station;
+        }
+
         //EZT MAJD TÖRÖLNI
+
         if (DEBUG)
         {
             _username = "sysadmin";
             _password = "ppadmin";
             Snackbar.Add("DEBUG MODE (AUTO FILL)");
         }
-    }
+        EventService.EksEvent += HandleEks;
 
+    }
+    private async void HandleEks(object sender, EksEventArgs e)
+    {
+        if (e.State == Data.EKS.EksState.In && MyClient.Station is not null)
+        {
+            if (e.Station.Id == MyClient.Station.Id)
+            {
+                var user = UserService.Get(x => x.Eks is not null && x.Eks.WorkerId == e.EksWorkerId);
+                if (user is not null)
+                {
+                    await InvokeAsync(() =>
+                    {
+                        ThisDialog?.Close(DialogResult.Ok(user));
+                    });
+                }
+                else
+                {
+                    Snackbar.Add("Ismeretlen EKS kulcs", Severity.Warning);
+                }
+            }
+
+        }
+        await InvokeAsync(StateHasChanged);
+    }
     void Submit()
     {
         var loginData = new UserCredentialsDTO { Password = _password, Username = _username };
@@ -61,4 +95,11 @@
             PasswordInput = InputType.Text;
         }
     }
+    @implements IDisposable
+    void IDisposable.Dispose()
+    {
+        EventService.EksEvent -= HandleEks;
+
+    }
+
 }

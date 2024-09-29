@@ -1,4 +1,5 @@
-﻿@using PalettaPolizeiPro.Dialogs
+﻿@using PalettaPolizeiPro.Data.LineEvents
+@using PalettaPolizeiPro.Dialogs
 @using PalettaPolizeiPro.Pages
 @inherits LayoutComponentBase
 <style>
@@ -40,12 +41,33 @@
 
     bool _drawerOpen = true;
 
+    protected override void OnInitialized()
+    {
+        EventService.EksEvent += HandleEks;
+    }
+    private void HandleEks(object? sender,EksEventArgs e)
+    {
+        
+        if (MyClient.User is null) { return; }
+        if (MyClient.User.Eks is null) { return; }
+
+
+        if (e.State == Data.EKS.EksState.Out && MyClient.LoggedInWithEks && e.Station.Id == MyClient.Station!.Id && e.EksWorkerId == MyClient.User!.Eks!.WorkerId)
+        {
+            MyClient.User = null;
+            MyClient.LoggedInWithEks = false;
+            InvokeAsync(StateHasChanged);
+        }
+    }
     protected override Task OnAfterRenderAsync(bool firstRender)
     {
         if (MyClient.User is null)
         {
             ShowLoginDialog();
         }
+
+
+
         return base.OnAfterRenderAsync(firstRender);
     }
     void DrawerToggle()
@@ -76,8 +98,18 @@
                     FullScreen = false,
                 });
             var result = await dialog.Result;
-            UserCredentialsDTO cred = (UserCredentialsDTO)result.Data;
-            var user = LoginService.LogIn(cred);
+            User user;
+            if (result.Data is User)
+            {
+                user = (User)result.Data;
+                MyClient.LoggedInWithEks = true;
+            }
+            else
+            {
+                UserCredentialsDTO cred = (UserCredentialsDTO)result.Data;
+                user = LoginService.LogIn(cred);
+            }
+
             if (user is null)
             {
                 Snackbar.Add("Sikertelen bejelentkezés");
@@ -90,5 +122,10 @@
         }
         catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
         await InvokeAsync(StateHasChanged);
+    }
+    @implements IDisposable
+    void IDisposable.Dispose()
+    {
+        EventService.EksEvent -= HandleEks;
     }
 }

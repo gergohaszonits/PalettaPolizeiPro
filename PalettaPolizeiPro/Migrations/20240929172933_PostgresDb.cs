@@ -18,7 +18,7 @@ namespace PalettaPolizeiPro.Migrations
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    KeyId = table.Column<string>(type: "text", nullable: false),
+                    KeyId = table.Column<string>(type: "text", nullable: true),
                     WorkerId = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
@@ -88,7 +88,6 @@ namespace PalettaPolizeiPro.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Username = table.Column<string>(type: "text", nullable: false),
                     Password = table.Column<string>(type: "text", nullable: false),
-                    WorkerID = table.Column<string>(type: "text", nullable: true),
                     Role = table.Column<int>(type: "integer", nullable: false),
                     EksId = table.Column<long>(type: "bigint", nullable: true)
                 },
@@ -154,19 +153,14 @@ namespace PalettaPolizeiPro.Migrations
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     State = table.Column<int>(type: "integer", nullable: false),
-                    EksId = table.Column<long>(type: "bigint", nullable: false),
+                    EksWorkerId = table.Column<string>(type: "text", nullable: false),
+                    EksKeyId = table.Column<string>(type: "text", nullable: true),
                     StationId = table.Column<long>(type: "bigint", nullable: false),
                     Time = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_EksEvents", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_EksEvents_Eks_EksId",
-                        column: x => x.EksId,
-                        principalTable: "Eks",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_EksEvents_Stations_StationId",
                         column: x => x.StationId,
@@ -318,11 +312,6 @@ namespace PalettaPolizeiPro.Migrations
                 column: "StationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_EksEvents_EksId",
-                table: "EksEvents",
-                column: "EksId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_EksEvents_StationId",
                 table: "EksEvents",
                 column: "StationId");
@@ -375,7 +364,8 @@ namespace PalettaPolizeiPro.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Users_EksId",
                 table: "Users",
-                column: "EksId");
+                column: "EksId",
+                unique: true);
         }
 
         /// <inheritdoc />

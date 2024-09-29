@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Identity.Client;
 using MudBlazor.Extensions;
 using PalettaPolizeiPro.Data;
+using PalettaPolizeiPro.Data.EKS;
 using PalettaPolizeiPro.Data.Palettas;
 using PalettaPolizeiPro.Data.Stations;
 using PalettaPolizeiPro.Database;
@@ -11,13 +12,14 @@ using PalettaPolizeiPro.Services.Stations;
 using Sharp7;
 using System;
 using System.Collections.Concurrent;
+using System.Text;
 using static System.Collections.Specialized.BitVector32;
 
 namespace PalettaPolizeiPro.Services.PalettaControl
 {
-    public class PalettaControlService : IPalettaControlService
+    public class ControlService : IControlService
     {
-        private PalettaControlService()
+        private ControlService()
         {
             _stationsService.OnStationChange += (s, a) =>
             {
@@ -36,7 +38,7 @@ namespace PalettaPolizeiPro.Services.PalettaControl
             };
         }
 
-        private static PalettaControlService _instance = new PalettaControlService();
+        private static ControlService _instance = new ControlService();
         private ConcurrentDictionary<string, IPLCLayer> _plcs = new ConcurrentDictionary<string, IPLCLayer>();
         private List<Station> _stations = new List<Station>();
         private StationService _stationsService = StationService.GetInstance();
@@ -44,9 +46,11 @@ namespace PalettaPolizeiPro.Services.PalettaControl
 
         private Dictionary<Station, QueryState?> QueryCache = new Dictionary<Station, QueryState?>();
         private Dictionary<Station, PalettaProperty?> PropertyCache = new Dictionary<Station, PalettaProperty?>();
+        private Dictionary<Station, Eks?> EksCache = new Dictionary<Station, Eks?>();
 
 
-        public static IPalettaControlService GetInstance()
+
+        public static IControlService GetInstance()
         {
             return _instance;
         }
@@ -128,19 +132,32 @@ namespace PalettaPolizeiPro.Services.PalettaControl
         public void PalettaGo(Station station)
         {
             var plc = FindPlcFromStation(station);
+           
             if (plc is null) { return; }
+            if (!plc.IsConnected)
+            {
+                return;
+            }
             plc.SetBytes(station.DB, 1, 1, [2]);
         }
         public void PalettaOut(Station station)
         {
             var plc = FindPlcFromStation(station);
             if (plc is null) { return; }
+            if (!plc.IsConnected)
+            {
+                return;
+            }
             plc.SetBytes(station.DB, 1, 1, [4]);
         }
         public void OperationStatusOff(Station station)
         {
             var plc = FindPlcFromStation(station);
             if (plc is null) { return; }
+            if (!plc.IsConnected)
+            {
+                return;
+            }
             plc.SetBytes(station.DB, 0, 1, [0]);
         }
 
@@ -148,6 +165,10 @@ namespace PalettaPolizeiPro.Services.PalettaControl
         {
             var plc = FindPlcFromStation(station);
             if (plc is null) { return; }
+            if (!plc.IsConnected)
+            {
+                return;
+            }
             plc.SetBytes(station.DB, 0, 1, [255]);
         }
         private void AttachStation(Station station)
@@ -282,6 +303,7 @@ namespace PalettaPolizeiPro.Services.PalettaControl
                 {
                     continue;
                 }
+               
                 var item = groups.FirstOrDefault(x => x.Plc.IP == plc.IP && x.Plc.Rack == plc.Rack && x.Plc.Slot == plc.Slot);
                 if (item is null)
                 {
@@ -433,6 +455,80 @@ namespace PalettaPolizeiPro.Services.PalettaControl
             {
                 context.Palettas.Add(paletta);
                 context.SaveChanges();
+            }
+        }
+
+        public Eks? GetEks(Station station)
+        {
+            var plc = FindPlcFromStation(station);
+
+            if (station.IsStationOn == false) { EksCache[station] = null; return null; }
+            if (plc is null) { EksCache[station] = null; return null; }
+            if (!plc.IsConnected) {EksCache[station] = null; return null;}
+
+            var bytes = plc.GetBytes(station.DB, 1718,12);
+
+
+            bool fullZero = true;
+            for (int i = 0; i < 12; i++)
+            {
+                if (bytes[i] != 0)
+                { 
+                    fullZero = false;
+                    break;
+                }
+            }
+
+            if (fullZero)
+            {
+                EksCache[station] = null;
+                return null;
+            }
+
+            string workerid = Encoding.UTF8.GetString(bytes).Trim().Replace("\0", "");
+
+            if (string.IsNullOrWhiteSpace(workerid))
+            {
+                EksCache[station] = null;
+                return null;
+            }
+
+            var eks = new Eks { WorkerId = workerid };
+            EksCache[station] = eks;
+            return eks;
+        }
+        public Eks? GetCachedEks(Station station)
+        {
+            Eks? e = null;
+            bool val = EksCache.TryGetValue(station, out e);
+            if (!val)
+            {
+                return null;
+            }
+            return e;
+        }
+
+        public List<Eks> GetStoredEksList()
+        {
+            using (var context = new DatabaseContext())
+            { 
+                return context.Eks.ToList();
+            }
+        }
+
+        public List<Eks> GetStoredEksList(Func<Eks, bool> predicate)
+        {
+            using (var context = new DatabaseContext())
+            {
+                return context.Eks.Where(predicate).ToList();
+            }
+        }
+
+        public Eks? EksFirstOrNull(Func<Eks, bool> predicate)
+        {
+            using (var context = new DatabaseContext())
+            {
+                return context.Eks.FirstOrDefault(predicate);
             }
         }
     }

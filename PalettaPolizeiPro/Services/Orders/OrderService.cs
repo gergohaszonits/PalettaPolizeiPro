@@ -90,7 +90,7 @@ namespace PalettaPolizeiPro.Services.Orders
         {
             using (var context = new DatabaseContext())
             {
-                return context.Orders.AsNoTracking().OrderByDescending(x => x.ScheduledTime).Include(x => x.FinishedPalettas).Include(x => x.OrderPalettaFinishes).Include(x => x.OrderPalettaSchedules).Include(x => x.ScheduledPalettas).Include(x => x.User).ToList();
+                return context.Orders.AsNoTracking().OrderByDescending(x => x.ScheduledTime).Include(x => x.FinishedPalettas).Include(x => x.OrderPalettaFinishes).Include(x => x.OrderPalettaSchedules).Include(x => x.ScheduledPalettas).Include(x => x.User).Include(x => x.User.Eks).ToList();
             }
         }
 
@@ -98,7 +98,7 @@ namespace PalettaPolizeiPro.Services.Orders
         {
             using (var context = new DatabaseContext())
             {
-                return context.Orders.AsNoTracking().OrderByDescending(x => x.ScheduledTime).Include(x => x.OrderPalettaFinishes).Include(x => x.OrderPalettaSchedules).Include(x => x.FinishedPalettas).Include(x => x.ScheduledPalettas).Include(x => x.User).Where(predicate).ToList();
+                return context.Orders.AsNoTracking().OrderByDescending(x => x.ScheduledTime).Include(x => x.OrderPalettaFinishes).Include(x => x.OrderPalettaSchedules).Include(x => x.FinishedPalettas).Include(x => x.ScheduledPalettas).Include(x => x.User).Include(x => x.User.Eks).Where(predicate).ToList();
             }
         }
 

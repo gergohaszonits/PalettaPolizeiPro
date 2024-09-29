@@ -1,0 +1,74 @@
+﻿@using PalettaPolizeiPro.Data.LineEvents
+@using PalettaPolizeiPro.Data.Palettas
+@using PalettaPolizeiPro.Dialogs
+
+<MudDialog>
+    <DialogContent>
+
+    </DialogContent>
+    <DialogActions>
+        <MudContainer>
+            <MudStack>
+                <div class="d-flex gap-5">
+                    <MudButton OnClick="CheckClicked" Variant="Variant.Outlined">Check adatok</MudButton>
+                    <MudButton OnClick="QueryClicked" Variant="Variant.Outlined">Query adatok</MudButton>
+                </div>
+                <div style="width:85%;">
+
+                    <ApexChart TItem="CheckEventArgs"
+                               Title="">
+
+                        <ApexPointSeries TItem="CheckEventArgs"
+                                         Items="_checkEvents.OrderBy(x=>x.Time)"
+                                         SeriesType="@SeriesType.Area"
+                                         Name="%"
+                                         Color="lightblue"
+                                         XValue="@(e => (e.Time.ToString("yy-MM-dd HH:mm:ss")))"
+                                         YValue="@(e => Math.Floor(Convert.ToDecimal(e.Property.ServicePercentage)))" />
+                    </ApexChart>
+                </div>
+
+            </MudStack>
+        </MudContainer>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter]
+    public required Paletta Paletta { get; set; }
+    [CascadingParameter] MudDialogInstance? ThisDialog { get; set; }
+    public List<CheckEventArgs> _checkEvents;
+
+    protected override void OnInitialized()
+    {
+        _checkEvents = EventService.GetCheckEvents(x => x.Property.Identifier == Paletta.Identifier);
+    }
+    private async Task CheckClicked()
+    {
+        var parameters = new DialogParameters<PalettaPropertiesTableDialog>();
+        parameters.Add(x => x.Paletta, Paletta);
+        var dialog = await Dialog.ShowAsync<PalettaPropertiesTableDialog>(Paletta.Identifier, parameters, new DialogOptions
+            {
+
+                CloseButton = true,
+                CloseOnEscapeKey = true,
+                FullScreen = false,
+                MaxWidth = MaxWidth.ExtraExtraLarge,
+                FullWidth = true,
+            });
+    }
+    private async Task QueryClicked()
+    {
+        var parameters = new DialogParameters<PalettaQueriesTableDialog>();
+        parameters.Add(x => x.Paletta, Paletta);
+        var dialog = await Dialog.ShowAsync<PalettaQueriesTableDialog>(Paletta.Identifier, parameters, new DialogOptions
+            {
+
+                CloseButton = true,
+                CloseOnEscapeKey = true,
+                FullScreen = false,
+                MaxWidth = MaxWidth.ExtraExtraLarge,
+                FullWidth = true,
+            });
+    }
+}

@@ -1,0 +1,109 @@
+﻿@page "/users"
+@using PalettaPolizeiPro.Dialogs
+<MudToolBar Class="gap-4">
+    <MudIconButton Variant="Variant.Filled" OnClick="AddClicked" Size="MudBlazor.Size.Medium" Icon="@Icons.Material.Rounded.Add" />
+</MudToolBar>
+<MudContainer Class="d-flex flex-column gap-4">
+    <MudStack>
+        @foreach (var user in _users)
+        {
+            <MudPaper Class="d-flex flex-column gap-0" Elevation="20">
+                <MudToolBar>
+                    <MudChip Icon="@Icons.Material.Rounded.Person" Color="Color.Secondary" T="string">@user.Username</MudChip>
+                    <MudChip Icon="@Icons.Material.Filled.HowToReg" Color="Color.Primary" T="string">@user.Role</MudChip>
+                    @if (user.Eks is not null)
+                    {
+                        <MudChip Icon="@Icons.Material.Rounded.Key" Color="Color.Surface" T="string">@user.Eks.WorkerId</MudChip>
+                    }
+
+                    <MudSpacer></MudSpacer>
+                    <MudIconButton OnClick="()=>EditClicked(user)" Icon="@Icons.Material.Rounded.Edit"></MudIconButton>
+                    <MudIconButton OnClick="()=>DeleteClicked(user)" Icon="@Icons.Material.Rounded.Delete"></MudIconButton>
+                </MudToolBar>
+            </MudPaper>
+        }
+    </MudStack>
+</MudContainer>
+@code {
+    List<User> _users;
+    protected override void OnInitialized()
+    {
+        Load();
+    }
+    private void Load()
+    {
+        _users = UserService.GetAll();
+
+    }
+    private async Task AddClicked()
+    {
+        var dialog = await Dialog.ShowAsync<UserEditorDialog>("Felhasználó hozzáadása", new DialogOptions
+            {
+                CloseButton = true,
+                CloseOnEscapeKey = true,
+            });
+        var result = await dialog.Result;
+        User? u = (User?)result.Data;
+        if (u is null) { return; }
+        try
+        {
+            UserService.AddUser(u);
+            Snackbar.Add("Felhasználó hozzáadva", Severity.Info);
+            Load();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            LogService.LogException(ex);
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+    private async Task EditClicked(User user)
+    {
+        var parameters = new DialogParameters<UserEditorDialog>();
+        parameters.Add(x => x.User, user);
+        var dialog = await Dialog.ShowAsync<UserEditorDialog>("Felhasználó szerkesztése", parameters, new DialogOptions
+            {
+                CloseButton = true,
+                CloseOnEscapeKey = true,
+            });
+        var result = await dialog.Result;
+        User? u = (User?)result.Data;
+        if (u is null) { return; }
+        try
+        {
+            UserService.ModifyUser(u);
+            Snackbar.Add("Felhasználó módosítva", Severity.Info);
+            Load();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            LogService.LogException(ex);
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+    private async Task DeleteClicked(User user)
+    {
+        try
+        {
+            var result = await Dialog.ShowMessageBox(
+               "Biztosan törlöd?",
+               "",
+               "Törlés", cancelText: "Mégsem");
+            if (result == true)
+            {
+                UserService.RemoveUser(user);
+                Snackbar.Add("Felhasználó törölve", Severity.Info);
+                Load();
+                await InvokeAsync(StateHasChanged);
+            }
+
+        }
+        catch (Exception ex)
+        {
+            LogService.LogException(ex);
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+}

@@ -12,7 +12,7 @@ using PalettaPolizeiPro.Database;
 namespace PalettaPolizeiPro.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20240928130354_PostgresDb")]
+    [Migration("20240929172933_PostgresDb")]
     partial class PostgresDb
     {
         /// <inheritdoc />
@@ -34,7 +34,6 @@ namespace PalettaPolizeiPro.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("KeyId")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("WorkerId")
@@ -80,8 +79,12 @@ namespace PalettaPolizeiPro.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
-                    b.Property<long>("EksId")
-                        .HasColumnType("bigint");
+                    b.Property<string>("EksKeyId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("EksWorkerId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int>("State")
                         .HasColumnType("integer");
@@ -93,8 +96,6 @@ namespace PalettaPolizeiPro.Migrations
                         .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("EksId");
 
                     b.HasIndex("StationId");
 
@@ -391,12 +392,10 @@ namespace PalettaPolizeiPro.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("WorkerID")
-                        .HasColumnType("text");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("EksId");
+                    b.HasIndex("EksId")
+                        .IsUnique();
 
                     b.ToTable("Users");
                 });
@@ -422,19 +421,11 @@ namespace PalettaPolizeiPro.Migrations
 
             modelBuilder.Entity("PalettaPolizeiPro.Data.LineEvents.EksEventArgs", b =>
                 {
-                    b.HasOne("PalettaPolizeiPro.Data.EKS.Eks", "Eks")
-                        .WithMany()
-                        .HasForeignKey("EksId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("PalettaPolizeiPro.Data.Stations.Station", "Station")
                         .WithMany()
                         .HasForeignKey("StationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Eks");
 
                     b.Navigation("Station");
                 });
@@ -530,10 +521,16 @@ namespace PalettaPolizeiPro.Migrations
             modelBuilder.Entity("PalettaPolizeiPro.Data.Users.User", b =>
                 {
                     b.HasOne("PalettaPolizeiPro.Data.EKS.Eks", "Eks")
-                        .WithMany()
-                        .HasForeignKey("EksId");
+                        .WithOne("User")
+                        .HasForeignKey("PalettaPolizeiPro.Data.Users.User", "EksId");
 
                     b.Navigation("Eks");
+                });
+
+            modelBuilder.Entity("PalettaPolizeiPro.Data.EKS.Eks", b =>
+                {
+                    b.Navigation("User")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("PalettaPolizeiPro.Data.Palettas.Order", b =>

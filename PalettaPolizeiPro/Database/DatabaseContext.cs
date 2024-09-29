@@ -66,11 +66,24 @@ namespace PalettaPolizeiPro.Database
                     context.Database.Migrate();
                 }
                 catch (Exception ex) { }
+                var adminEks = context.Eks.FirstOrDefault(x=>x.WorkerId == "36562");
+                if (adminEks is null)
+                {
+                    adminEks = new Eks 
+                    {
+                        WorkerId = "36562",
+
+                    };
+                    context.Eks.Add(adminEks);
+                    context.SaveChanges();
+
+                }
                 int adminCount = context.Users.Where(x => x.Role == Role.Admin).Count();
                 if (adminCount == 0)
                 {
                     context.Users.Add(new User
                     {
+                        EksId = adminEks.Id,
                         Username = "sysadmin",
                         Password = HashString("ppadmin"),
                         Role = Role.Admin

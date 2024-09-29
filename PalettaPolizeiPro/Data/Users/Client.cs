@@ -7,6 +7,7 @@ namespace PalettaPolizeiPro.Data.Users
     {
         private Guid Guid = Guid.NewGuid();
         public string? Ip { get; set; }
+        public bool LoggedInWithEks { get; set; }
         public ClientSessionMemory SessionMemory { get; set; } = new ClientSessionMemory();
         public Client()
         {

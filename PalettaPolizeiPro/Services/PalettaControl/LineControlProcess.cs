@@ -13,7 +13,7 @@ namespace PalettaPolizeiPro.Services.PalettaControl
 {
     public class LineControlProcess : IUpdatable
     {
-        private PalettaControlService _palettaService;
+        private ControlService _controlService;
         private bool _sentOut = false;
 
 
@@ -30,10 +30,10 @@ namespace PalettaPolizeiPro.Services.PalettaControl
         private bool _reloadTrigger = false;
 
         private DateTime _lastOrdersCheck = DateTime.MinValue;
-        public LineControlProcess(PalettaControlService palettaService)
+        public LineControlProcess(ControlService palettaService)
         {
-            _palettaService = palettaService;
-            _groups = _palettaService.GetPlcStationGroups();
+            _controlService = palettaService;
+            _groups = _controlService.GetPlcStationGroups();
             _stationsService.OnStationChange += (o, s) => { _reloadTrigger = true; };
         }
 
@@ -77,7 +77,7 @@ namespace PalettaPolizeiPro.Services.PalettaControl
                 if (_reloadTrigger)
                 {
                     _reloadTrigger = false;
-                    _groups = _palettaService.GetPlcStationGroups();
+                    _groups = _controlService.GetPlcStationGroups();
                 }
 
 
@@ -104,8 +104,8 @@ namespace PalettaPolizeiPro.Services.PalettaControl
         }
         private void HandleQuery(Station station)
         {
-            var state = _palettaService.GetQueryState(station);
-            var cached = _palettaService.GetCachedQueryState(station);
+            var state = _controlService.GetQueryState(station);
+            var cached = _controlService.GetCachedQueryState(station);
             if (cached is not null && state is null)
             {
                 _lineEventService.NewQueryEvent(new QueryEventArgs { State = null, Station = station, StationId = station.Id, Time = DateTime.Now });
@@ -124,7 +124,7 @@ namespace PalettaPolizeiPro.Services.PalettaControl
                 if (orders.Count > 0)
                 {
                     //out
-                    _palettaService.PalettaOut(station);
+                    _controlService.PalettaOut(station);
                     var paletta = orders[0].ScheduledPalettas.FirstOrDefault(x => x.Identifier == state.PalettaName);
                     foreach (var order in orders)
                     {
@@ -140,11 +140,14 @@ namespace PalettaPolizeiPro.Services.PalettaControl
                         }
                         _orderService.AddOrUpdate(order);
                     }
+                    state.ControlFlag = 4;
+                    _lineEventService.NewQueryEvent(new QueryEventArgs { State = state, Station = station, StationId = station.Id, Time = DateTime.Now });
+
                 }
                 else
                 {
                     //go
-                    _palettaService.PalettaGo(station);
+                    _controlService.PalettaGo(station);
                     //ha go sikerul akkor a state 2 
                     state.ControlFlag = 2;
                     _lineEventService.NewQueryEvent(new QueryEventArgs { State = state, Station = station, StationId = station.Id, Time = DateTime.Now });
@@ -154,8 +157,8 @@ namespace PalettaPolizeiPro.Services.PalettaControl
         }
         private void HandleCheck(Station station)
         {
-            var prev = _palettaService.GetCachedProperty(station);
-            var property = _palettaService.GetProperty(station);
+            var prev = _controlService.GetCachedProperty(station);
+            var property = _controlService.GetProperty(station);
             if (property != null)
             {
                 if (prev is not null && prev.Identifier != property.Identifier)
@@ -175,6 +178,17 @@ namespace PalettaPolizeiPro.Services.PalettaControl
         }
         private void HandleEks(Station station)
         {
+            var prevEks = _controlService.GetCachedEks(station);
+            var eks = _controlService.GetEks(station);
+
+            if (prevEks is null && eks is not null)
+            {
+                _lineEventService.NewEksEvent(new EksEventArgs { State = EksState.In, EksWorkerId = eks.WorkerId, Station = station, StationId = station.Id, Time = DateTime.Now });
+            }
+            else if (prevEks is not null && eks is null)
+            {
+                _lineEventService.NewEksEvent(new EksEventArgs { State = EksState.Out, EksWorkerId = prevEks.WorkerId, Station = station, StationId = station.Id, Time = DateTime.Now });
+            }
 
         }
         private void OrdersCheck()
@@ -183,7 +197,7 @@ namespace PalettaPolizeiPro.Services.PalettaControl
             foreach (var order in orders)
             {
                 if (order.EndSortTime < DateTime.Now && (order.Status == OrderStatus.Scheduled || order.Status == OrderStatus.Sorting))
-                { 
+                {
                     order.Status = OrderStatus.Failed;
                     order.FinishedTime = DateTime.Now;
                     _orderService.AddOrUpdate(order);

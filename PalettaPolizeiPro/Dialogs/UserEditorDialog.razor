@@ -1,0 +1,159 @@
+﻿@using PalettaPolizeiPro.Data.EKS
+<MudDialog>
+    <DialogContent>
+        <div class="d-flex flex-column gap-5">
+            <div class="d-flex gap-6">
+                <MudTextField Variant="Variant.Outlined" @bind-Value="_username" Label="Név"></MudTextField>
+                <MudTextField Variant="Variant.Outlined" @bind-Value="_password" Label="Jelszó" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ToggleShow" AdornmentAriaLabel="Jelszó mutatása"></MudTextField>
+
+            </div>
+            <div class="d-flex gap-6 align-center">
+                <MudTextField Variant="Variant.Outlined" @bind-Value="_workerId" Label="Törzsszám"></MudTextField>
+                <MudRadioGroup @bind-Value="_role">
+                    <MudRadio Value="Role.Admin" Color="Color.Secondary" Dense="true">Admin</MudRadio>
+                    <MudRadio Value="Role.Engineer" Color="Color.Primary" Dense="true">Mérnök</MudRadio>
+                    <MudRadio Value="Role.Worker" Color="Color.Primary" Dense="true">Felhasználó</MudRadio>
+                </MudRadioGroup>
+            </div>
+
+        </div>
+    </DialogContent>
+    <DialogActions>
+        @if (_editMode)
+        {
+            <MudButton Color="Color.Primary" OnClick="Submit">Módosít</MudButton>
+        }
+        else
+        {
+            <MudButton Color="Color.Primary" OnClick="Submit">Mentés</MudButton>
+        }
+    </DialogActions>
+</MudDialog>
+@code {
+    [Parameter]
+    public User? User { get; set; }
+    private bool _editMode = false;
+
+    private long _id = 0;
+    private string _password = "";
+    private string _passwordHash = "";
+    private string _username = "";
+    private string _workerId = "";
+    private bool _isShow = false;
+    private Role _role = Role.Admin;
+
+    [CascadingParameter] MudDialogInstance? ThisDialog { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (User is null)
+        {
+
+        }
+        else
+        {
+            _id = User.Id;
+            _editMode = true;
+            _username = User.Username;
+            _passwordHash = User.Password;
+            _role = User.Role;
+            if (User.Eks is not null)
+            {
+                _workerId = User.Eks.WorkerId;
+            }
+        }
+    }
+    InputType PasswordInput = InputType.Password;
+    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    void ToggleShow()
+    {
+        @if (_isShow)
+        {
+            _isShow = false;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+        else
+        {
+            _isShow = true;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
+        }
+    }
+    private bool PasswordIsWrong
+    {
+        get
+        {
+            return _password.Length < 6 || _password.All(char.IsDigit) || _password.All(char.IsLetter);
+        }
+    }
+    private void Submit()
+    {
+        if (_editMode)
+        {
+            if (!string.IsNullOrWhiteSpace(_password))
+            {
+                if (PasswordIsWrong)
+                {
+                    Snackbar.Add("Minimum 6 karakter, tartalmazzon számot,betűt is");
+                    return;
+                }
+                _passwordHash = HashString(_password);
+            }
+            if (User!.Eks is null)
+            {
+                User = new User
+                    {
+                        Id = _id,
+                        Password = _passwordHash,
+                        Role = _role,
+                        Username = _username,
+                        Eks = string.IsNullOrWhiteSpace(_workerId) ? null : new Eks
+                        {
+                            WorkerId = _workerId
+                        },
+
+                    };
+            }
+            else
+            {
+
+                var oldEks = User.Eks;
+                User = new User
+                    {
+                        Id = _id,
+                        Password = _passwordHash,
+                        Role = _role,
+                        Username = _username,
+                        Eks = User.Eks.WorkerId != _workerId ? new Eks
+                        {
+                            WorkerId = _workerId
+                        } : oldEks,
+                    };
+
+            }
+
+        }
+        else
+        {
+            if (PasswordIsWrong)
+            {
+                Snackbar.Add("Minimum 6 karakter, tartalmazzon számot,betűt is");
+                return;
+            }
+            User = new User
+                {
+                    Password = HashString(_password),
+                    Role = _role,
+                    Username = _username,
+                    Eks = string.IsNullOrWhiteSpace(_workerId) ? null : new Eks
+                    {
+                        WorkerId = _workerId
+                    },
+
+                };
+        }
+        ThisDialog!.Close(DialogResult.Ok(User));
+    }
+}

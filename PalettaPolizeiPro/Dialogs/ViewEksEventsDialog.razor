@@ -1,0 +1,138 @@
+﻿@using Microsoft.AspNetCore.Mvc
+@using PalettaPolizeiPro.Data.LineEvents
+@using PalettaPolizeiPro.Data.Stations
+@using System.Text
+@implements IDisposable
+<style>
+    .data_row {
+        max-width: 150px;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    @@keyframes glow {
+        0% {
+            background-color: rgba(0, 100, 255, 0);
+        }
+
+        50% {
+            background-color: rgba(0, 100, 255, 1);
+        }
+
+        100% {
+            background-color: rgba(0, 100, 255, 0);
+        }
+    }
+
+    .glow {
+        animation: glow 0.5s;
+    }
+</style>
+<MudTable Items="@_values" Filter="new Func<EksEventArgs,bool>(FilterFunc)" Dense="true" Hover="true" Bordered="true" Striped="true">
+    <ToolBarContent>
+        <MudButton Variant="Variant.Outlined" OnClick="ExportToCSV" StartIcon="@Icons.Material.Rounded.Download">Exportálás</MudButton>
+        <MudSpacer />
+        <MudTextField @bind-Value="searchString" Placeholder="Eks keresése" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="MudBlazor.Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Azonosító</MudTh>
+        <MudTh>EKS kulcs</MudTh>
+        <MudTh>Művelet</MudTh>
+        <MudTh>Idő</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        @if (_values.First().Id == context.Id && _animationAllowed)
+        {
+            _animationAllowed = false;
+            <MudTd Class="data_row glow" DataLabel="Azonosító">@context.Id</MudTd>
+            <MudTd Class="data_row glow" DataLabel="EKS kulcs">@context.EksWorkerId</MudTd>
+            <MudTd Class="data_row glow" DataLabel="Művelet">@context.State</MudTd>
+            <MudTd Class="data_row glow" DataLabel="Idő">@context.Time</MudTd>
+        }
+        else
+        {
+            <MudTd Class="data_row" DataLabel="Azonosító">@context.Id</MudTd>
+            <MudTd Class="data_row" DataLabel="EKS kulcs">@context.EksWorkerId</MudTd>
+            <MudTd Class="data_row" DataLabel="Művelet">@context.State</MudTd>
+            <MudTd Class="data_row" DataLabel="Idő">@context.Time</MudTd>
+        }
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+    <PagerContent>
+        <MudTablePager HideRowsPerPage="true" />
+    </PagerContent>
+</MudTable>
+
+
+@code {
+
+    [Parameter] public required Station Station { get; set; }
+    private List<EksEventArgs> _values;
+
+    private int _step;
+    private readonly int _amount = 10;
+    private string searchString = "";
+
+    private bool _animationAllowed;
+
+    protected override void OnInitialized()
+    {
+        Load();
+        EventService.EksEvent += OnValueChange;
+    }
+
+    void IDisposable.Dispose()
+    {
+        EventService.EksEvent -= OnValueChange;
+    }
+
+    private void OnValueChange(object? sender, EksEventArgs args)
+    {
+        if (args.StationId != Station.Id) { return; }
+
+        _values.Insert(0, args);
+        _animationAllowed = true;
+
+        InvokeAsync(StateHasChanged);
+    }
+
+
+    private void Load()
+    {
+        _values = EventService.GetEksEvents(x => x.StationId == Station.Id);
+        InvokeAsync(StateHasChanged);
+    }
+
+    private bool FilterFunc(EksEventArgs element) => FilterFunc(element, searchString);
+
+    private bool FilterFunc(EksEventArgs element, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.EksWorkerId is not null && element.EksWorkerId.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+    private byte[] CreateCSVFromList(List<EksEventArgs> values)
+    {
+        var sb = new StringBuilder();
+
+        sb.AppendLine("Azonosító;EKS kulcs;Művelet;Idő");
+
+        foreach (var item in values)
+        {
+            sb.AppendLine($"{item.Id};{item.EksWorkerId};{item.State};{item.Time}");
+        }
+
+        return Encoding.Unicode.GetBytes(sb.ToString());
+    }
+    private async Task ExportToCSV()
+    {
+        var csvData = CreateCSVFromList(_values);
+        var fileName = $"{Station.Name}.csv";
+        await JS.InvokeVoidAsync("BlazorDownloadFile", fileName, "text/csv", csvData);
+    }
+
+}

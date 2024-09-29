@@ -1,0 +1,50 @@
+﻿@page "/palettas"
+@using PalettaPolizeiPro.Data.Palettas
+@using PalettaPolizeiPro.Dialogs
+
+<MudContainer>
+    <MudStack>
+        <MudTextField @bind-Text="_palettaFilter" Immediate="true" Style="width:50%" FullWidth="false" T="string" Placeholder="keresés"></MudTextField>
+        <MudContainer Class="d-flex justify-center align-content-start flex-wrap flex-grow-1 gap-5 ma-3">
+            @foreach (var p in _palettas)
+            {
+                @if (string.IsNullOrWhiteSpace(_palettaFilter) || p.Identifier.Contains(_palettaFilter, StringComparison.CurrentCultureIgnoreCase))
+                {
+                    <MudButton OnClick="()=>PalettaClicked(p)" Color="Color.Surface" Variant="Variant.Filled">
+                        <div style="d-flex">
+                            <MudProgressLinear Style="border-radius:90px" Color="Color.Secondary" Max="p.Properties[0].PredefiniedCycle" Value="p.Properties[0].ActualCycle" />
+                            <MudText Typo="Typo.subtitle1">
+                                @p.Identifier @Math.Round(p.Properties[0].ServicePercentage, 3)%
+                            </MudText>
+                        </div>
+                    </MudButton>
+                }
+            }
+        </MudContainer>
+    </MudStack>
+</MudContainer>
+
+@code {
+
+    private List<Paletta> _palettas;
+    private string? _palettaFilter = null;
+
+    protected override void OnInitialized()
+    {
+        _palettas = PalettaControl.GetPalettasWithLastProperty().OrderByDescending(x => x.Properties.Last().ServicePercentage).ToList();
+    }
+
+    private async Task PalettaClicked(Paletta paletta)
+    {
+        var parameters = new DialogParameters<PalettaHistoryDialog>();
+        parameters.Add(x => x.Paletta, paletta);
+        var dialog = await Dialog.ShowAsync<PalettaHistoryDialog>(paletta.Identifier, parameters, new DialogOptions
+            {
+                CloseButton = true,
+                CloseOnEscapeKey = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.ExtraExtraLarge
+            });
+    }
+
+}

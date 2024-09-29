@@ -22,7 +22,7 @@ namespace PalettaPolizeiPro.Services.Users
         {
             using (var context = new DatabaseContext())
             {
-                return context.Users.AsNoTracking().Include(x=>x.Eks).FirstOrDefault(predicate);
+                return context.Users.AsNoTracking().Include(x => x.Eks).FirstOrDefault(predicate);
             }
         }
 

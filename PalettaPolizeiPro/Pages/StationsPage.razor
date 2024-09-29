@@ -214,9 +214,25 @@
 
                                         <MudIconButton OnClick="()=>EditStation(station)" Size="MudBlazor.Size.Small" Icon="@Icons.Material.Rounded.Edit"></MudIconButton>
 
-                                        <MudIconButton Size="MudBlazor.Size.Small" Icon="@Icons.Material.Rounded.TableRows"></MudIconButton>
+                                        <MudIconButton OnClick="()=>OpenEksEventsView(station)" Size="MudBlazor.Size.Small" Icon="@Icons.Material.Rounded.TableRows"></MudIconButton>
                                     </div>
                                 </div>
+                                @if (group.Plc.IsConnected)
+                                {
+                                    <div class="d-flex">
+                                        @{
+                                            var eks = PalettaControl.GetCachedEks(station);
+                                        }
+                                        @if (eks is not null && !string.IsNullOrWhiteSpace(eks.WorkerId))
+                                        {
+                                            <MudChip T="string" Color="Color.Primary" Size="MudBlazor.Size.Small">@eks.WorkerId</MudChip>
+                                        }
+                                        else
+                                        {
+                                            <MudChip T="string" Color="Color.Error" Size="MudBlazor.Size.Small">Üres</MudChip>
+                                        }
+                                    </div>
+                                }
                             </MudPaper>
                         }
                     </MudStack>
@@ -560,6 +576,19 @@
         var dialog = await Dialog.ShowAsync<ViewQueryStatesDialog>(station.Name, parameters, new DialogOptions
             {
 
+                CloseButton = true,
+                CloseOnEscapeKey = true,
+                FullScreen = false,
+                MaxWidth = MaxWidth.ExtraExtraLarge,
+                FullWidth = true,
+            });
+    }
+    private async Task OpenEksEventsView(Station station)
+    {
+        var parameters = new DialogParameters<ViewEksEventsDialog>();
+        parameters.Add(x => x.Station, station);
+        var dialog = await Dialog.ShowAsync<ViewEksEventsDialog>(station.Name, parameters, new DialogOptions
+            {
                 CloseButton = true,
                 CloseOnEscapeKey = true,
                 FullScreen = false,

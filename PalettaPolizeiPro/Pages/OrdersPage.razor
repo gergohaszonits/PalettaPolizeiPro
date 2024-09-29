@@ -2,11 +2,12 @@
 @using PalettaPolizeiPro.Data.Palettas
 @using PalettaPolizeiPro.Dialogs
 @using PalettaPolizeiPro.Services.Orders
+ <MudToolBar>
+    <MudIconButton OnClick="AddOrder" Variant="Variant.Filled" Size="MudBlazor.Size.Medium" Icon="@Icons.Material.Rounded.Add" />
 
+     </MudToolBar>
 <MudContainer Class="d-flex flex-column gap-4">
-    <div>
-        <MudIconButton OnClick="AddOrder" Variant="Variant.Filled" Size="MudBlazor.Size.Medium" Icon="@Icons.Material.Rounded.Add" />
-    </div>
+
 
     <MudStack>
         @foreach (var order in _orders)

@@ -45,11 +45,11 @@ if (SIMULATION)
     SimulatedTcpPlc.InitSimulation("localhost", 6969);
 }
 //
-var palettaControl = PalettaControlService.GetInstance();
+var palettaControl = ControlService.GetInstance();
 var stationService = StationService.GetInstance();
 var eventService = LineEventService.GetInstance();
 palettaControl.Init(stationService.GetAll());
-var lineProcess = new LineControlProcess((PalettaControlService)palettaControl);
+var lineProcess = new LineControlProcess((ControlService)palettaControl);
 
 
 builder.Services.AddSingleton(typeof(IStationService), stationService);
@@ -61,7 +61,7 @@ builder.Services.AddSingleton(typeof(LineControlProcess), lineProcess);
 builder.Services.AddScoped(typeof(ILoginService), typeof(LoginService));
 builder.Services.AddScoped(typeof(IOrderService), typeof(OrderService));
 
-builder.Services.AddSingleton(typeof(IPalettaControlService), palettaControl);
+builder.Services.AddSingleton(typeof(IControlService), palettaControl);
 builder.Services.AddScoped(typeof(Client));
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddTransient<ClientIpService>();

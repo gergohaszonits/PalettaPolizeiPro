@@ -1,10 +1,11 @@
-﻿using PalettaPolizeiPro.Data.Palettas;
+﻿using PalettaPolizeiPro.Data.EKS;
+using PalettaPolizeiPro.Data.Palettas;
 using PalettaPolizeiPro.Data.Stations;
 using PalettaPolizeiPro.Services.PLC;
 
 namespace PalettaPolizeiPro.Services.PalettaControl
 {
-    public interface IPalettaControlService
+    public interface IControlService
     {
         PalettaProperty? GetProperty(Station station);
         QueryState GetQueryState(Station station);
@@ -18,6 +19,14 @@ namespace PalettaPolizeiPro.Services.PalettaControl
         void PalettaOut(Station station);
         void OperationStatusOff(Station station);
         void OperationStatusOn(Station station);
+
+        Eks? GetEks(Station station);
+        Eks? GetCachedEks(Station station);
+
+        List<Eks> GetStoredEksList();
+        List<Eks> GetStoredEksList(Func<Eks, bool> predicate);
+        Eks? EksFirstOrNull(Func<Eks, bool> predicate);
+
 
         List<Paletta> GetPalettas();
         List<Paletta> GetPalettas(Func<Paletta,bool> predicate);
