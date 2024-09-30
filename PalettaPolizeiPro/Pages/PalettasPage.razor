@@ -4,7 +4,7 @@
 
 <MudContainer>
     <MudStack>
-        <MudTextField @bind-Text="_palettaFilter" Immediate="true" Style="width:50%" FullWidth="false" T="string" Placeholder="keresés"></MudTextField>
+        <MudTextField Style="height:50px" FullWidth="true" Variant = "Variant.Filled" AdornmentIcon="@Icons.Material.Rounded.Search" IconSize="MudBlazor.Size.Large"  @bind-Text="_palettaFilter" Immediate="true"  T="string" Placeholder="keresés"></MudTextField>
         <MudContainer Class="d-flex justify-center align-content-start flex-wrap flex-grow-1 gap-5 ma-3">
             @foreach (var p in _palettas)
             {

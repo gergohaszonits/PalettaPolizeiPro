@@ -1,0 +1,82 @@
+﻿@using PalettaPolizeiPro.Data.LineEvents
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.h5">Te vagy @(WorkerId)?</MudText>
+        <MudText Typo="Typo.h4">@_counter</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="No">nem</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Yes">igen</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [Parameter]
+    public required string WorkerId { get; set; }
+    [CascadingParameter]
+    MudDialogInstance? ThisDialog { get; set; }
+
+    private int _counter = 5;
+
+    protected override void OnInitialized()
+    {
+        EventService.EksEvent += OnEksEvent;
+        EventService.EksConfirmEvent += OnEksConfirmEvent;
+
+        Task.Run(async () =>
+        {
+            while (_counter != 0)
+            {
+                await Task.Delay(1000);
+                _counter--;
+                await InvokeAsync(StateHasChanged);
+            }
+            await InvokeAsync(() =>
+            {
+                ThisDialog!.Close(DialogResult.Ok(false));
+            });
+        });
+    }
+
+    private void Yes()
+    {
+        ThisDialog!.Close(DialogResult.Ok(true));
+        EventService.NewEksConfirmEvent(new EksConfirmEventArgs { WorkerId = this.WorkerId});
+    }
+    private void No()
+    {
+        ThisDialog!.Close(DialogResult.Ok(false));
+    }
+
+
+    async void OnEksEvent(object? sender, EksEventArgs args)
+    {
+        if (args.State == Data.EKS.EksState.Out && args.EksWorkerId == WorkerId)
+        {
+            await InvokeAsync(() =>
+           {
+               ThisDialog!.Close(DialogResult.Ok(false));
+           });
+        }
+    }
+    async void OnEksConfirmEvent(object? sender, EksConfirmEventArgs args)
+    {
+        if (args.WorkerId == WorkerId)
+        {
+            await InvokeAsync(() =>
+           {
+               ThisDialog!.Close(DialogResult.Ok(false));
+           });
+        }
+    }
+
+
+    @implements IDisposable
+    void IDisposable.Dispose()
+    {
+        EventService.EksEvent -= OnEksEvent;
+        EventService.EksConfirmEvent -= OnEksConfirmEvent;
+    }
+
+}

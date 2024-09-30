@@ -9,11 +9,14 @@
             </div>
             <div class="d-flex gap-6 align-center">
                 <MudTextField Variant="Variant.Outlined" @bind-Value="_workerId" Label="Törzsszám"></MudTextField>
-                <MudRadioGroup @bind-Value="_role">
-                    <MudRadio Value="Role.Admin" Color="Color.Secondary" Dense="true">Admin</MudRadio>
-                    <MudRadio Value="Role.Engineer" Color="Color.Primary" Dense="true">Mérnök</MudRadio>
-                    <MudRadio Value="Role.Worker" Color="Color.Primary" Dense="true">Felhasználó</MudRadio>
-                </MudRadioGroup>
+                @if (!NoRoles)
+                {
+                    <MudRadioGroup @bind-Value="_role">
+                        <MudRadio Value="Role.Admin" Color="Color.Secondary" Dense="true">Admin</MudRadio>
+                        <MudRadio Value="Role.Engineer" Color="Color.Primary" Dense="true">Mérnök</MudRadio>
+                        <MudRadio Value="Role.Worker" Color="Color.Primary" Dense="true">Felhasználó</MudRadio>
+                    </MudRadioGroup>
+                }
             </div>
 
         </div>
@@ -40,6 +43,9 @@
     private string _username = "";
     private string _workerId = "";
     private bool _isShow = false;
+    [Parameter]
+    public bool NoRoles { get; set; }
+
     private Role _role = Role.Admin;
 
     [CascadingParameter] MudDialogInstance? ThisDialog { get; set; }

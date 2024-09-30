@@ -29,13 +29,16 @@ namespace PalettaPolizeiPro.Services.PalettaControl
 
 
         List<Paletta> GetPalettas();
-        List<Paletta> GetPalettas(Func<Paletta,bool> predicate);
+        List<Paletta> GetPalettas(Func<Paletta, bool> predicate);
         List<Paletta> GetPalettasWithLastProperty(Func<Paletta, bool> predicate);
         List<Paletta> GetPalettasWithLastProperty();
         List<PalettaProperty> GetPalettaProperties();
         List<PalettaProperty> GetPalettaProperties(Func<PalettaProperty, bool> predicate);
 
         void CreatePaletta(Paletta paletta);
+        byte GetControlByte(Station station);
+        byte GetStatusByte(Station station);
+
 
     }
 }

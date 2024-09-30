@@ -27,10 +27,6 @@
             </div>
             <div class="d-flex gap-6">
                 <MudNumericField Min="0" Variant="Variant.Outlined" @bind-Value="_stationLoop" Label="Kör"></MudNumericField>
-                @if (_stationType == StationType.Eks)
-                {
-                    <MudTextField Lines="3" Variant="Variant.Outlined" @bind-Value="_stationPcIp" Label="PC ips"></MudTextField>
-                }
             </div>
         </div>
     </DialogContent>

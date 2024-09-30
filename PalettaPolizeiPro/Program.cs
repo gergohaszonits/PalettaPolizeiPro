@@ -24,6 +24,7 @@ using System.Diagnostics;
 
 #if DEBUG
 DEBUG = true;
+SIMULATION = true;
 #endif
 
 LogService.Init(Path.Combine(Environment.CurrentDirectory, "Logs"));
@@ -97,6 +98,7 @@ app.UseStaticFiles();
 app.UseRouting();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
+
 var jobs = new LongRunningJobHandler(new List<IUpdatable> {lineProcess  }, 10);
 
 jobs.Start();

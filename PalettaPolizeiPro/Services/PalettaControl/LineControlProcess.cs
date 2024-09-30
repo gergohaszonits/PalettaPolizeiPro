@@ -1,7 +1,9 @@
-﻿using PalettaPolizeiPro.Data.EKS;
+﻿using Microsoft.EntityFrameworkCore;
+using PalettaPolizeiPro.Data.EKS;
 using PalettaPolizeiPro.Data.LineEvents;
 using PalettaPolizeiPro.Data.Palettas;
 using PalettaPolizeiPro.Data.Stations;
+using PalettaPolizeiPro.Database;
 using PalettaPolizeiPro.Services.Events;
 using PalettaPolizeiPro.Services.Orders;
 using PalettaPolizeiPro.Services.Stations;
@@ -30,6 +32,11 @@ namespace PalettaPolizeiPro.Services.PalettaControl
         private bool _reloadTrigger = false;
 
         private DateTime _lastOrdersCheck = DateTime.MinValue;
+        private DateTime _lastDeleteCheck = DateTime.MinValue;
+
+        private TimeSpan _keepDataTime = TimeSpan.FromDays(30);
+        private TimeSpan _deleteDataCheckTime = TimeSpan.FromMinutes(10);
+
         public LineControlProcess(ControlService palettaService)
         {
             _controlService = palettaService;
@@ -68,6 +75,12 @@ namespace PalettaPolizeiPro.Services.PalettaControl
                     tasks.Add(Task.Run(OrdersCheck));
                 }
 
+                if ((DateTime.Now - _lastDeleteCheck) > _deleteDataCheckTime)
+                {
+                    _lastDeleteCheck = DateTime.Now;
+                    tasks.Add(Task.Run(DeleteCheck));
+                }
+
                 await Task.WhenAll(tasks);
 
                 LastUpdateDuration = (DateTime.Now - LastUpdated);
@@ -99,7 +112,6 @@ namespace PalettaPolizeiPro.Services.PalettaControl
             else if (station.StationType == StationType.Eks)
             {
                 HandleEks(station);
-
             }
         }
         private void HandleQuery(Station station)
@@ -117,6 +129,7 @@ namespace PalettaPolizeiPro.Services.PalettaControl
 
                 var orders = _orderService.GetWhere(x => (x.Status == OrderStatus.Sorting
                 || x.Status == OrderStatus.Scheduled)
+                && DateTime.Now > x.StartSortTime && DateTime.Now < x.EndSortTime
                 && x.ScheduledPalettas.FirstOrDefault(x => x.Identifier == state.PalettaName) is not null
                 && x.FinishedPalettas.FirstOrDefault(x => x.Identifier == state.PalettaName) is null);
 
@@ -124,7 +137,12 @@ namespace PalettaPolizeiPro.Services.PalettaControl
                 if (orders.Count > 0)
                 {
                     //out
+                    outagain:
                     _controlService.PalettaOut(station);
+                    if (_controlService.GetControlByte(station) == 1)
+                    {
+                        goto outagain;
+                    }
                     var paletta = orders[0].ScheduledPalettas.FirstOrDefault(x => x.Identifier == state.PalettaName);
                     foreach (var order in orders)
                     {
@@ -146,8 +164,13 @@ namespace PalettaPolizeiPro.Services.PalettaControl
                 }
                 else
                 {
-                    //go
+                //go
+                     goagain:
                     _controlService.PalettaGo(station);
+                    if (_controlService.GetControlByte(station) == 1)
+                    {
+                        goto goagain;
+                    }
                     //ha go sikerul akkor a state 2 
                     state.ControlFlag = 2;
                     _lineEventService.NewQueryEvent(new QueryEventArgs { State = state, Station = station, StationId = station.Id, Time = DateTime.Now });
@@ -202,6 +225,81 @@ namespace PalettaPolizeiPro.Services.PalettaControl
                     order.FinishedTime = DateTime.Now;
                     _orderService.AddOrUpdate(order);
                 }
+            }
+        }
+        private void DeleteCheck()
+        {
+            //remove orders
+            using (var context = new DatabaseContext())
+            {
+                var range = context.Orders.Where(x => x.FinishedTime != null && x.FinishedTime < (DateTime.Now + _keepDataTime));
+
+                foreach (var order in range)
+                {
+                    _orderService.Notify(new OrderEventArgs { Order  = order,Time = DateTime.Now,State = Data.ChangeState.Removed});
+                }
+                context.Orders.RemoveRange(range);
+                context.SaveChanges();
+            }
+
+            //palettaproperties
+            using (var context = new DatabaseContext())
+            {
+                var groups = context.PalettaProperties
+                    .Where(x => x.ReadTime < (DateTime.Now + _keepDataTime))
+                    .GroupBy(x => x.Identifier)
+                    .ToList();
+
+                foreach (var group in groups)
+                {
+
+                    if (group.Count() > 1)
+                    {
+                        var itemsToRemove = group.Skip(1);
+                        context.PalettaProperties.RemoveRange(itemsToRemove);
+                    }
+                }
+
+                context.SaveChanges();
+            }
+            //paletta check events
+            using (var context = new DatabaseContext())
+            {
+                var groups = context.CheckEvents
+                    .Where(x => x.Time < (DateTime.Now + _keepDataTime))
+                    .GroupBy(x => x.Property.Identifier)
+                    .ToList();
+
+                foreach (var group in groups)
+                {
+
+                    if (group.Count() > 1)
+                    {
+                        var itemsToRemove = group.Skip(1);
+                        context.CheckEvents.RemoveRange(itemsToRemove);
+                    }
+                }
+
+                context.SaveChanges();
+            }
+            //paletta query events
+            using (var context = new DatabaseContext())
+            {
+                var groups = context.QueryEvents
+                    .Where(x => x.Time < (DateTime.Now + _keepDataTime))
+                    .GroupBy(x => x.State.PalettaName)
+                    .ToList();
+
+                foreach (var group in groups)
+                {
+                    if (group.Count() > 1)
+                    {
+                        var itemsToRemove = group.Skip(1);
+                        context.QueryEvents.RemoveRange(itemsToRemove);
+                    }
+                }
+
+                context.SaveChanges();
             }
         }
     }

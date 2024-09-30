@@ -2,10 +2,13 @@
 @using PalettaPolizeiPro.Data.Palettas
 @using PalettaPolizeiPro.Dialogs
 @using PalettaPolizeiPro.Services.Orders
- <MudToolBar>
-    <MudIconButton OnClick="AddOrder" Variant="Variant.Filled" Size="MudBlazor.Size.Medium" Icon="@Icons.Material.Rounded.Add" />
+<MudToolBar>
+    @if (MyClient.User.Role != Role.Worker)
+    {
+        <MudIconButton OnClick="AddOrder" Variant="Variant.Filled" Size="MudBlazor.Size.Medium" Icon="@Icons.Material.Rounded.Add" />
+    }
 
-     </MudToolBar>
+</MudToolBar>
 <MudContainer Class="d-flex flex-column gap-4">
 
 
@@ -51,7 +54,7 @@
                         }
                         else
                         {
-                            scolor = Color.Surface;    
+                            scolor = Color.Surface;
                         }
                     }
 
@@ -60,7 +63,7 @@
                         <MudChip Icon="@Icons.Material.Rounded.DateRange" Color="Color.Info" T="string">@order.FinishedTime</MudChip>
                     }
                     <MudChip Icon="@Icons.Material.Rounded.Info" Color="scolor" T="string">@order.Status</MudChip>
-                    @if ((order.Status == OrderStatus.Sorting || order.Status == OrderStatus.Scheduled) && (MyClient.User!.Id == order.User.Id || MyClient.User!.Role == Role.Admin))
+                    @if (MyClient.User!.Role != Role.Worker && (order.Status == OrderStatus.Sorting || order.Status == OrderStatus.Scheduled) && (MyClient.User!.Id == order.User.Id || MyClient.User!.Role == Role.Admin))
                     {
                         <MudIconButton OnClick="()=>CloseOrder(order)" Icon="@Icons.Material.Filled.Close"></MudIconButton>
                     }
@@ -74,7 +77,7 @@
                 <MudToolBar>
                     @foreach (var paletta in order.ScheduledPalettas)
                     {
-                        MudBlazor.Color color = order.FinishedPalettas.FirstOrDefault(x=>x.Id == paletta.Id) is not null ? Color.Success : Color.Surface;
+                        MudBlazor.Color color = order.FinishedPalettas.FirstOrDefault(x => x.Id == paletta.Id) is not null ? Color.Success : Color.Surface;
                         <MudChip Color="color" T="string">@paletta.Identifier</MudChip>
                     }
                 </MudToolBar>

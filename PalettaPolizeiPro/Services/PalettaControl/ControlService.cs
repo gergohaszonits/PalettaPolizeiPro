@@ -150,6 +150,26 @@ namespace PalettaPolizeiPro.Services.PalettaControl
             }
             plc.SetBytes(station.DB, 1, 1, [4]);
         }
+        public byte GetControlByte(Station station)
+        {
+            var plc = FindPlcFromStation(station);
+            if (plc is null) { return 0; }
+            if (!plc.IsConnected)
+            {
+                return 0;
+            }
+           return plc.GetBytes(station.DB, 1, 1)[0];
+        }
+        public byte GetStatusByte(Station station)
+        {
+            var plc = FindPlcFromStation(station);
+            if (plc is null) { return 0; }
+            if (!plc.IsConnected)
+            {
+                return 0;
+            }
+            return plc.GetBytes(station.DB, 0, 1)[0];
+        }
         public void OperationStatusOff(Station station)
         {
             var plc = FindPlcFromStation(station);

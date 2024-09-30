@@ -116,5 +116,9 @@ namespace PalettaPolizeiPro.Services.Orders
                 Time = DateTime.Now
             });
         }
+        public void Notify(OrderEventArgs args)
+        {
+            OrdersChanged.Invoke(this, args);
+        }
     }
 }

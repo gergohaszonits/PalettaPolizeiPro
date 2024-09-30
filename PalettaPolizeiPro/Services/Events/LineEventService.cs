@@ -22,6 +22,9 @@ namespace PalettaPolizeiPro.Services.Events
         public event EventHandler<EksEventArgs> EksEvent = delegate { };
         public EksEventArgs LastEksEvent { get; private set; }
 
+        public event EventHandler<EksConfirmEventArgs> EksConfirmEvent = delegate { };
+        public EksConfirmEventArgs LastEksConfirmEvent { get; private set; }
+
         public List<CheckEventArgs> GetCheckEvents()
         {
             using (var context = new DatabaseContext())
@@ -155,6 +158,18 @@ namespace PalettaPolizeiPro.Services.Events
                 catch (Exception ex) { LogService.LogException(ex); }
             });
 
+        }
+        public Task NewEksConfirmEvent(EksConfirmEventArgs e)
+        {
+            return Task.Run(() =>
+            {
+                try
+                {
+                    LastEksConfirmEvent = e;
+                    EksConfirmEvent.Invoke(this, e);
+                }
+                catch (Exception ex) { LogService.LogException(ex); }
+            });
         }
     }
 }

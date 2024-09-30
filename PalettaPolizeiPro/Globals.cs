@@ -5,6 +5,8 @@ namespace PalettaPolizeiPro
     public static class Globals
     {
         
+        public static bool SIMULATION = false;
+
         public static MudTheme MainTheme = new MudTheme
         {
             PaletteLight = new PaletteLight
@@ -17,7 +19,6 @@ namespace PalettaPolizeiPro
         };
 
         public static bool ProgramRunning = true;
-        public static readonly bool SIMULATION = true;
         public static bool DEBUG = true;
 
 

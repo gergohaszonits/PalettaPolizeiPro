@@ -18,7 +18,13 @@
         LogService.Log($"Acces from ip [{MyClient.Ip}]", LogLevel.Information);
 
 
-       
+        EventService.QueryEvent += (s, a) =>
+        {
+            if (a.State.ControlFlag == 4)
+            {
+                Snackbar.Add($"{a.Station.Name} -> {a.State.PalettaName} kisorolva",Severity.Success);    
+            }
+        };
 
 
     }

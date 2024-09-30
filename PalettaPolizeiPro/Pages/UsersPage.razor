@@ -1,5 +1,11 @@
 ﻿@page "/users"
 @using PalettaPolizeiPro.Dialogs
+@if (MyClient.User!.Role != Role.Admin)
+{
+    <MudButton Style="margin:20px;" FullWidth="true" Color="Color.Secondary" Variant="Variant.Outlined" OnClick="OwnUserUpdate">Saját felhasználó módosítása</MudButton>
+    <MudAlert Severity="Severity.Error">Nincs jogosultságod ehhez a művelethez</MudAlert>
+    return;    
+}
 <MudToolBar Class="gap-4">
     <MudIconButton Variant="Variant.Filled" OnClick="AddClicked" Size="MudBlazor.Size.Medium" Icon="@Icons.Material.Rounded.Add" />
 </MudToolBar>
@@ -62,6 +68,7 @@
     {
         var parameters = new DialogParameters<UserEditorDialog>();
         parameters.Add(x => x.User, user);
+
         var dialog = await Dialog.ShowAsync<UserEditorDialog>("Felhasználó szerkesztése", parameters, new DialogOptions
             {
                 CloseButton = true,
@@ -99,6 +106,33 @@
                 await InvokeAsync(StateHasChanged);
             }
 
+        }
+        catch (Exception ex)
+        {
+            LogService.LogException(ex);
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+    private async Task OwnUserUpdate()
+    {
+        var parameters = new DialogParameters<UserEditorDialog>();
+        parameters.Add(x => x.User, MyClient.User);
+        parameters.Add(x => x.NoRoles, true);
+
+        var dialog = await Dialog.ShowAsync<UserEditorDialog>("Felhasználó szerkesztése", parameters, new DialogOptions
+            {
+                CloseButton = true,
+                CloseOnEscapeKey = true,
+            });
+        var result = await dialog.Result;
+        User? u = (User?)result.Data;
+        if (u is null) { return; }
+        try
+        {
+            UserService.ModifyUser(u);
+            Snackbar.Add("Felhasználó módosítva", Severity.Info);
+            Load();
+            await InvokeAsync(StateHasChanged);
         }
         catch (Exception ex)
         {

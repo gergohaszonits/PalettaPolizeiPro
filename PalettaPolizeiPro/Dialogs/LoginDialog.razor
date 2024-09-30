@@ -5,15 +5,11 @@
             <MudTextField Immediate="true" Variant="Variant.Outlined" Placeholder="Név" @bind-Value="_username"></MudTextField>
             <MudTextField Immediate="true" Variant="Variant.Outlined" @bind-Value="_password" Label="Jelszó" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ToggleShow" AdornmentAriaLabel="Jelszó mutatása" />
         </div>
-        @if (MyClient.Station is not null)
-        {
+        <div class="d-flex flex-column gap-0">
             <MudButton Color="Color.Success" StartIcon="@Icons.Material.Filled.VpnKey" Disabled="true">EKS belépés engedélyezve</MudButton>
-            <MudText Color="Color.Success">@MyClient.Station.Name</MudText>
-        }
-        else
-        {
-            <MudButton StartIcon="@Icons.Material.Filled.VpnKeyOff" Disabled="true">EKS kulccsal való belépés nem elérhető</MudButton>
-        }
+            <MudText Typo="Typo.caption">EKS kulcs ki és be helyezésével tudja aktiválni a bejelentkezést</MudText>
+        </div>
+
     </DialogContent>
     <DialogActions>
         <MudButton Color="Color.Primary" OnClick="Submit">Belépés</MudButton>
@@ -28,13 +24,6 @@
 
     protected override void OnInitialized()
     {
-
-        var station = StationService.Get(x => x.StationPcIp is not null && x.StationPcIp.Contains(MyClient.Ip!));
-        if (station is not null)
-        {
-            MyClient.Station = station;
-        }
-
         //EZT MAJD TÖRÖLNI
 
         if (DEBUG)
@@ -48,25 +37,69 @@
     }
     private async void HandleEks(object sender, EksEventArgs e)
     {
-        if (e.State == Data.EKS.EksState.In && MyClient.Station is not null)
+        if (e.State == Data.EKS.EksState.In)
         {
-            if (e.Station.Id == MyClient.Station.Id)
-            {
-                var user = UserService.Get(x => x.Eks is not null && x.Eks.WorkerId == e.EksWorkerId);
-                if (user is not null)
-                {
-                    await InvokeAsync(() =>
-                    {
-                        ThisDialog?.Close(DialogResult.Ok(user));
-                    });
-                }
-                else
-                {
-                    Snackbar.Add("Ismeretlen EKS kulcs", Severity.Warning);
-                }
-            }
 
+            var user = UserService.Get(x => x.Eks is not null && x.Eks.WorkerId == e.EksWorkerId);
+            if (user is not null)
+            {
+                var parameters = new DialogParameters<ConfirmEksLoginDialog>();
+                parameters.Add(x => x.WorkerId, user.Eks!.WorkerId);
+                var dialog = await Dialog.ShowAsync<ConfirmEksLoginDialog>("EKS bejelentkezés", parameters, new DialogOptions
+                    {
+                        CloseButton = false,
+                        CloseOnEscapeKey = false,
+                        MaxWidth = MaxWidth.Small,
+                        FullScreen = false,
+                        BackdropClick = false
+
+                    });
+                var result = await dialog.Result;
+                bool? val = (bool?)result!.Data;
+                if (val == false) { return; }
+                MyClient.Station = e.Station;
+                await InvokeAsync(() =>
+                {
+                    ThisDialog?.Close(DialogResult.Ok(user));
+                });
+            }
+            else
+            {
+                user = new User
+                    {
+                        Password = HashString(GeneratePassword()),
+                        Role = Role.Engineer,
+                        Username = "UNNAMED",
+                        Eks = new Data.EKS.Eks
+                        {
+
+                            WorkerId = e.EksWorkerId,
+                        }
+                    };
+                UserService.AddUser(user);
+                var parameters = new DialogParameters<ConfirmEksLoginDialog>();
+                parameters.Add(x => x.WorkerId, user.Eks!.WorkerId);
+                var dialog = await Dialog.ShowAsync<ConfirmEksLoginDialog>("EKS bejelentkezés", parameters, new DialogOptions
+                    {
+                        CloseButton = false,
+                        CloseOnEscapeKey = false,
+                        MaxWidth = MaxWidth.Small,
+                        FullScreen = false,
+                        BackdropClick = false
+
+                    });
+                var result = await dialog.Result;
+                bool? val = (bool?)result!.Data;
+                if (val == false) { return; }
+                MyClient.Station = e.Station;
+                await InvokeAsync(() =>
+                {
+                    ThisDialog?.Close(DialogResult.Ok(user));
+                });
+            }
         }
+
+
         await InvokeAsync(StateHasChanged);
     }
     void Submit()
