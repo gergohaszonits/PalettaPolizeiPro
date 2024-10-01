@@ -211,7 +211,7 @@ namespace PalettaPolizeiPro.Services.PalettaControl
                     _plcs.TryAdd(key, plc);
                 }
                 _stations.Add(station);
-                plc.Connect();
+                //plc.Connect();
                 if (station.StationType == StationType.Query)
                 {
                     GetQueryState(station);

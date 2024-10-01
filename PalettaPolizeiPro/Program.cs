@@ -24,9 +24,8 @@ using System.Diagnostics;
 
 #if DEBUG
 DEBUG = true;
-SIMULATION = true;
+//SIMULATION = true;
 #endif
-
 LogService.Init(Path.Combine(Environment.CurrentDirectory, "Logs"));
 LogService.Log("Server started", LogLevel.Information);
 
@@ -81,7 +80,7 @@ builder.Services.AddMudServices(config =>
 });
 
 #if RELEASE
-    builder.WebHost.UseUrls("http://*:80");
+    builder.WebHost.UseUrls("http://*:2222");
 #endif
 
 var app = builder.Build();

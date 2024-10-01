@@ -29,10 +29,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\ProductionLineSimulation\ProductionLineSimulation\ProductionLineSimulation.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Folder Include="Logs\" />
   </ItemGroup>
 

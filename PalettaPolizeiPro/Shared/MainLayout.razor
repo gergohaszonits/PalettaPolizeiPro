@@ -12,6 +12,9 @@
 <MudDialogProvider />
 <MudSnackbarProvider />
 <MudPopoverProvider />
+
+<PageTitle>Paletta Polizei</PageTitle>
+
 @if (MyClient.User is null)
 {
     return;
@@ -95,7 +98,7 @@
     {
         try
         {
-            var dialog = await Dialog.ShowAsync<LoginDialog>("Bejelentkezés", new DialogOptions
+            var dialog = await Dialog.ShowAsync<LoginDialog>("Bejelentkezés - Paletta Polizei", new DialogOptions
                 {
                     CloseButton = false,
                     BackdropClick = false,

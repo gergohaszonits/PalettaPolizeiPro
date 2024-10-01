@@ -25,5 +25,10 @@
                 }
             }
         }
+        public override string ToString()
+        {
+            return $"Ip: {Ip}, Rack: {Rack}, Slot: {Slot}, IsStationOn: {IsStationOn}, Name: {Name}, " +
+                   $"Loop: {Loop}, DB: {DB}, StationPcIp: {StationPcIp}, StationType: {StationType}";
+        }
     }
 }

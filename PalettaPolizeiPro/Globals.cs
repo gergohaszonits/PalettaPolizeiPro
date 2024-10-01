@@ -19,7 +19,7 @@ namespace PalettaPolizeiPro
         };
 
         public static bool ProgramRunning = true;
-        public static bool DEBUG = true;
+        public static bool DEBUG = false;
 
 
         public static readonly int PALETTA_CHECK_DATABLOCK_INDEX = 0;

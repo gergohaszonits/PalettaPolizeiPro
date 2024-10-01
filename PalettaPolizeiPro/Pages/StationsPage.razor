@@ -532,7 +532,6 @@
             string[] parts = line.Split(';');
             parts[6] = parts[6].Trim();
             StationType type;
-            Console.WriteLine($"[{parts[6]}]");
             if (parts[6] == "EKS")
             {
                 type = StationType.Eks;
@@ -546,7 +545,8 @@
                 type = StationType.Check;
             }
 
-            StationService.AddStation(new Station
+           
+            var station = new Station
                 {
                     Ip = parts[2],
                     Name = parts[0],
@@ -556,8 +556,8 @@
                     DB = Convert.ToInt32(parts[5]),
                     StationType = type,
                     IsStationOn = true,
-                    StationPcIp = StationType.Eks == type ? parts[7].Trim() : null
-                });
+                };
+            StationService.AddStation(station);
         }
     }
     private async Task OpenPalettaPropertiesView(Station station)

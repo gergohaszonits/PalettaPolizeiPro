@@ -1,4 +1,5 @@
 ﻿global using static PalettaPolizeiPro.HelperFunctions;
+using Sharp7;
 using System;
 using System.Security.Cryptography;
 using System.Text;
@@ -53,6 +54,50 @@ namespace PalettaPolizeiPro
             }
 
             return new string(password.OrderBy(x => random.Next()).ToArray());
+        }
+        public static string GetIdentifier(byte[] bytes, int loop)
+        {
+            string lNummer = "";
+            int lLen = 3 - loop.ToString().Length;
+            for (int i = 0; i < lLen; i++)
+            {
+                lNummer += "0";
+            }
+            lNummer = lNummer + loop;
+
+            string hex = "";
+            string wNummer = "";
+
+            for (int i = 0; i < 2; i++)
+            {
+                byte[] temp = [bytes.GetByteAt(0 + i)];
+                hex += BitConverter.ToString(temp);
+            }
+
+            int wLen = 4 - hex.Length;
+            for (int i = 0; i < wLen; i++)
+            {
+                wNummer += "0";
+            }
+            wNummer += hex;
+
+            return "L" + lNummer + "W" + wNummer;
+        }
+        public static byte[] SetIdentifierNummer(string wNum)
+        {
+            return Enumerable.Range(0, wNum.Length)
+                          .Where(x => x % 2 == 0)
+                          .Select(x => Convert.ToByte(wNum.Substring(x, 2), 16))
+                          .ToArray();
+        }
+       
+        public static Type GetOriginalClass(Type type)
+        {
+            while (type.BaseType != null && type.BaseType != typeof(object))
+            {
+                type = type.BaseType;
+            }
+            return type;
         }
     }
 }

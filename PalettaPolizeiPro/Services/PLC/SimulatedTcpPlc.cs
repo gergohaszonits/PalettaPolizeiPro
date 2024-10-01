@@ -1,8 +1,9 @@
-﻿using ProductionLineSimulation.LineCommunication.Services;
-using Sharp7;
+﻿using ProductionLineSimulation.Communication;
 using ProductionLineSimulation.Communication.Data;
 using ProductionLineSimulation.LineCommunication.Data;
-using ProductionLineSimulation.Communication;
+using ProductionLineSimulation.LineCommunication.Services;
+using Sharp7;
+
 
 namespace PalettaPolizeiPro.Services.PLC
 {

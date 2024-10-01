@@ -40,6 +40,7 @@
         <MudTh>Jelenlegi kör</MudTh>
         <MudTh>Meghatározott kör</MudTh>
         <MudTh>Százalék</MudTh>
+        <MudTh>Motorszám</MudTh>
         <MudTh>Idő</MudTh>
     </HeaderContent>
     <RowTemplate>
@@ -51,6 +52,7 @@
             <MudTd Class="data_row glow" DataLabel="Jelenlegi kör">@context.Property.ActualCycle</MudTd>
             <MudTd Class="data_row glow" DataLabel="Meghatározott kör">@context.Property.PredefiniedCycle</MudTd>
             <MudTd Class="data_row glow" DataLabel="Százalék">@Math.Round(context.Property.ServicePercentage,2)%</MudTd>
+            <MudTd Class="data_row glow" DataLabel="Motorszám">@context.Property.EngineNumber</MudTd>
             <MudTd Class="data_row glow" DataLabel="Idő">@context.Time</MudTd>
         }
         else
@@ -60,6 +62,7 @@
             <MudTd Class="data_row" DataLabel="Jelenlegi kör">@context.Property.ActualCycle</MudTd>
             <MudTd Class="data_row" DataLabel="Meghatározott kör">@context.Property.PredefiniedCycle</MudTd>
             <MudTd Class="data_row" DataLabel="Százalék">@Math.Round(context.Property.ServicePercentage, 2)%</MudTd>
+            <MudTd Class="data_row" DataLabel="Motorszám">@context.Property.EngineNumber</MudTd>
             <MudTd Class="data_row" DataLabel="Idő">@context.Time</MudTd>
         }
     </RowTemplate>
@@ -126,12 +129,12 @@
         var sb = new StringBuilder();
 
         // Add CSV header
-        sb.AppendLine("Azonosító;Paletta;Jelenlegi kör;Meghatározott kör;Százalék;Idő");
+        sb.AppendLine("Azonosító;Paletta;Jelenlegi kör;Meghatározott kör;Százalék;Motorszám;Idő");
 
         // Add CSV rows
         foreach (var item in values)
         {
-            sb.AppendLine($"{item.Id};{item.Property.Identifier};{item.Property.ActualCycle};{item.Property.PredefiniedCycle};{Math.Round(item.Property.ServicePercentage, 2)}%;{item.Time}");
+            sb.AppendLine($"{item.Id};{item.Property.Identifier};{item.Property.ActualCycle};{item.Property.PredefiniedCycle};{Math.Round(item.Property.ServicePercentage, 2)}%;{item.Property.EngineNumber};{item.Time}");
         }
 
         return Encoding.Unicode.GetBytes(sb.ToString());
