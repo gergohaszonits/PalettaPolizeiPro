@@ -18,8 +18,15 @@ namespace ProductionLineSimulation.LineCommunication.Serialization
             {
                 JsonElement root = doc.RootElement;
                 string typeName = root.GetProperty("Type").GetString();
+                /// ez egy sebtapasz 
+                if (DEBUG)
+                {
+                    typeName = typeName.Replace("ProductionLineSimulation,", "PalettaPolizeiPro,");
+                }
+                ///
                 Type type = Type.GetType(typeName);
 
+               
                 if (type == null || !typeof(LinePacketReply).IsAssignableFrom(type))
                 {
                     throw new JsonException($"Unknown type: {typeName}");

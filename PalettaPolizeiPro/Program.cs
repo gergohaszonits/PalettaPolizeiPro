@@ -24,13 +24,12 @@ using System.Diagnostics;
 
 #if DEBUG
 DEBUG = true;
-//SIMULATION = true;
+SIMULATION = true;
 #endif
+
 LogService.Init(Path.Combine(Environment.CurrentDirectory, "Logs"));
 LogService.Log("Server started", LogLevel.Information);
-
 var builder = WebApplication.CreateBuilder(args);
-
 StaticWebAssetsLoader.UseStaticWebAssets(builder.Environment, builder.Configuration);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
@@ -50,17 +49,12 @@ var stationService = StationService.GetInstance();
 var eventService = LineEventService.GetInstance();
 palettaControl.Init(stationService.GetAll());
 var lineProcess = new LineControlProcess((ControlService)palettaControl);
-
-
 builder.Services.AddSingleton(typeof(IStationService), stationService);
 builder.Services.AddScoped(typeof(IUserService), typeof(UserService));
 builder.Services.AddSingleton(typeof(LineEventService), eventService);
 builder.Services.AddSingleton(typeof(LineControlProcess), lineProcess);
-
-
 builder.Services.AddScoped(typeof(ILoginService), typeof(LoginService));
 builder.Services.AddScoped(typeof(IOrderService), typeof(OrderService));
-
 builder.Services.AddSingleton(typeof(IControlService), palettaControl);
 builder.Services.AddScoped(typeof(Client));
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();

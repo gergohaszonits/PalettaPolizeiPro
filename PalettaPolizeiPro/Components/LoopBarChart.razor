@@ -77,8 +77,11 @@ else
     private void Update(Paletta p)
     {
         var prop = p.Properties.Last();
-
-        if (prop.ServicePercentage <= 80)
+        if (p.IsOut)
+        {
+            _series.Add(new DataSeries { Name = "K", Number = 1, });
+        }
+        else if (prop.ServicePercentage <= 80)
         {
             _series.Add(new DataSeries { Name = "<80%", Number = 1, });
         }
@@ -96,10 +99,7 @@ else
         {
             _series.Add(new DataSeries { Name = ">=100%", Number = 1, });
         }
-        if (p.IsOut)
-        {
-            _series.Add(new DataSeries { Name = "K", Number = 1, });
-        }
+        
         if (p.Marked)
         {
             _series.Add(new DataSeries { Name = "M", Number = 1, });

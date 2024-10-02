@@ -431,6 +431,7 @@ namespace PalettaPolizeiPro.Services.PalettaControl
                         InScheduled = p.InScheduled,
                         Loop = p.Loop,
                         Marked = p.Marked,
+                        IsOut = p.IsOut,
                         PalettaError = p.PalettaError,
                         ServiceFlag = p.ServiceFlag,
                         Properties = p.Properties
@@ -459,6 +460,7 @@ namespace PalettaPolizeiPro.Services.PalettaControl
                         InScheduled = p.InScheduled,
                         Loop = p.Loop,
                         Marked = p.Marked,
+                        IsOut = p.IsOut,
                         PalettaError = p.PalettaError,
                         ServiceFlag = p.ServiceFlag,
                         Properties = p.Properties
@@ -506,6 +508,7 @@ namespace PalettaPolizeiPro.Services.PalettaControl
             }
 
             string workerid = Encoding.UTF8.GetString(bytes).Trim().Replace("\0", "");
+            workerid = ExtractNumbersFromString(workerid);
 
             if (string.IsNullOrWhiteSpace(workerid))
             {

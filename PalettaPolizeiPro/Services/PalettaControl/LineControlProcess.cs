@@ -136,8 +136,8 @@ namespace PalettaPolizeiPro.Services.PalettaControl
 
                 if (orders.Count > 0)
                 {
-                    //out
-                    outagain:
+                //out
+                outagain:
                     _controlService.PalettaOut(station);
                     if (_controlService.GetControlByte(station) == 1)
                     {
@@ -165,7 +165,7 @@ namespace PalettaPolizeiPro.Services.PalettaControl
                 else
                 {
                 //go
-                     goagain:
+                goagain:
                     _controlService.PalettaGo(station);
                     if (_controlService.GetControlByte(station) == 1)
                     {
@@ -232,21 +232,23 @@ namespace PalettaPolizeiPro.Services.PalettaControl
             //remove orders
             using (var context = new DatabaseContext())
             {
-                var range = context.Orders.Where(x => x.FinishedTime != null && x.FinishedTime < (DateTime.Now + _keepDataTime));
-
-                foreach (var order in range)
+                var range = context.Orders.Where(x => x.FinishedTime != null && (x.FinishedTime + _keepDataTime) < (DateTime.Now));
+                if (range.Count() > 0)
                 {
-                    _orderService.Notify(new OrderEventArgs { Order  = order,Time = DateTime.Now,State = Data.ChangeState.Removed});
+                    foreach (var order in range)
+                    {
+                        _orderService.Notify(new OrderEventArgs { Order = order, Time = DateTime.Now, State = Data.ChangeState.Removed });
+                    }
+                    context.Orders.RemoveRange(range);
+                    context.SaveChanges();
                 }
-                context.Orders.RemoveRange(range);
-                context.SaveChanges();
             }
 
             //palettaproperties
             using (var context = new DatabaseContext())
             {
                 var groups = context.PalettaProperties
-                    .Where(x => x.ReadTime < (DateTime.Now + _keepDataTime))
+                    .Where(x => (x.ReadTime + _keepDataTime) < DateTime.Now )
                     .GroupBy(x => x.Identifier)
                     .ToList();
 
@@ -266,7 +268,7 @@ namespace PalettaPolizeiPro.Services.PalettaControl
             using (var context = new DatabaseContext())
             {
                 var groups = context.CheckEvents
-                    .Where(x => x.Time < (DateTime.Now + _keepDataTime))
+                    .Where(x => (x.Time + _keepDataTime) < DateTime.Now)
                     .GroupBy(x => x.Property.Identifier)
                     .ToList();
 
@@ -286,7 +288,7 @@ namespace PalettaPolizeiPro.Services.PalettaControl
             using (var context = new DatabaseContext())
             {
                 var groups = context.QueryEvents
-                    .Where(x => x.Time < (DateTime.Now + _keepDataTime))
+                    .Where(x => (x.Time + _keepDataTime) < DateTime.Now)
                     .GroupBy(x => x.State.PalettaName)
                     .ToList();
 
@@ -298,7 +300,6 @@ namespace PalettaPolizeiPro.Services.PalettaControl
                         context.QueryEvents.RemoveRange(itemsToRemove);
                     }
                 }
-
                 context.SaveChanges();
             }
         }

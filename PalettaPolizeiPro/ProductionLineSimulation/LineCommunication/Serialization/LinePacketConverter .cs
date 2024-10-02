@@ -19,10 +19,12 @@ namespace ProductionLineSimulation.LineCommunication.Serialization
                 string typeName = root.GetProperty("Type").GetString();
                 Type type = Type.GetType(typeName);
 
+                /*
                 if (type == null || !typeof(LinePacket).IsAssignableFrom(type))
                 {
                     throw new JsonException($"Unknown type: {typeName}");
                 }
+                 */
 
                 string json = root.GetRawText();
                 return (LinePacket)JsonSerializer.Deserialize(json, type, options);

@@ -42,7 +42,8 @@ namespace PalettaPolizeiPro.Services.Orders
                             OrderId = order.Id,
                             PalettaId = p.Id
                         });
-
+                        p.Marked = true;
+                        context.Entry(p).State = EntityState.Modified;
                     }
                     context.SaveChanges();
 
@@ -65,6 +66,17 @@ namespace PalettaPolizeiPro.Services.Orders
                             });
                         }
                     }
+
+                    if (order.Status == OrderStatus.Failed || order.Status == OrderStatus.Cancelled)
+                    {
+
+                        foreach (var p in order.ScheduledPalettas)
+                        {
+                            context.Entry(p).State |= EntityState.Modified;
+                            p.Marked = false;
+                        }
+                    }
+
                     context.SaveChanges();
                 }
 

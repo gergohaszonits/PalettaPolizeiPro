@@ -55,6 +55,18 @@ namespace PalettaPolizeiPro
 
             return new string(password.OrderBy(x => random.Next()).ToArray());
         }
+        public static string ExtractNumbersFromString(string input)
+        {
+            string output = "";
+            for (int i = 0; i < input.Length; i++)
+            {
+                if (char.IsDigit(input[i]))
+                {
+                    output += input[i];
+                }
+            }
+            return output;
+        }
         public static string GetIdentifier(byte[] bytes, int loop)
         {
             string lNummer = "";

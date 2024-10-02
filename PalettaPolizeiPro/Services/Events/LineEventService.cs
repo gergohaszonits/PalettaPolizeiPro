@@ -76,20 +76,20 @@ namespace PalettaPolizeiPro.Services.Events
                 {
                     using (var context = new DatabaseContext())
                     {
-                        var paletta = context.Palettas.FirstOrDefault(x => x.Identifier == e.State.PalettaName);
-                        if (paletta is null)
+                        var paletta = context.Palettas.FirstOrDefault(x => x.Identifier == e.State.PalettaName);             
+                        if(paletta is not null)
                         {
-                            paletta = new Data.Palettas.Paletta
+                            if (e.State.ControlFlag == 4)
                             {
-                                Identifier = e.State.PalettaName,
-                                Loop = e.Station.Loop,
-                            };
-                            context.Palettas.Add(paletta); // mentunk hogy kapjon ID t az entitiytol
-                            context.SaveChanges();
-
+                                paletta.IsOut = true;
+                                paletta.Marked = false;
+                                context.Entry(paletta).State = EntityState.Modified;
+                                context.SaveChanges();
+                            }
+                            e.State.PalettaId = paletta.Id;
                         }
 
-                        e.State.PalettaId = paletta.Id;
+                       
                         var temp = e.Station;
                         e.Station = null;
                         context.QueryEvents.Add(e);
@@ -123,6 +123,15 @@ namespace PalettaPolizeiPro.Services.Events
                             context.Palettas.Add(paletta); // mentunk hogy kapjon ID t az entitiytol
                             context.SaveChanges();
 
+                        }
+                        else
+                        {
+                            if (paletta.IsOut)
+                            {
+                                paletta.IsOut = false;
+                                context.Entry(paletta).State = EntityState.Modified;
+                                context.SaveChanges();
+                            }
                         }
 
                         e.Property.PalettaId = paletta.Id;

@@ -96,13 +96,24 @@
     }
     private void Submit()
     {
+        if (string.IsNullOrWhiteSpace(_username) || _username.Length < 4)
+        {
+            Snackbar.Add("Név: minimum 4 karakter");
+            return;
+        }
+        
         if (_editMode)
         {
+            if (_username != User!.Username && UserService.Get(x => x.Username == _username) is not null)
+            {
+                Snackbar.Add("Ez a felhasznéló név már foglalt");
+                return;
+            }
             if (!string.IsNullOrWhiteSpace(_password))
             {
                 if (PasswordIsWrong)
                 {
-                    Snackbar.Add("Minimum 6 karakter, tartalmazzon számot,betűt is");
+                    Snackbar.Add("Jelszó: minimum 6 karakter, tartalmazzon számot,betűt is");
                     return;
                 }
                 _passwordHash = HashString(_password);
@@ -143,9 +154,14 @@
         }
         else
         {
+            if (UserService.Get(x => x.Username == _username) is not null)
+            {
+                Snackbar.Add("Ez a felhasznéló név már foglalt");
+                return;
+            }
             if (PasswordIsWrong)
             {
-                Snackbar.Add("Minimum 6 karakter, tartalmazzon számot,betűt is");
+                Snackbar.Add("Jelszó: minimum 6 karakter, tartalmazzon számot,betűt is");
                 return;
             }
             User = new User

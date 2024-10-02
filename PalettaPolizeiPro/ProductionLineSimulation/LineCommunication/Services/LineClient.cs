@@ -45,6 +45,12 @@ namespace ProductionLineSimulation.LineCommunication.Services
                         WriteIndented = true
                     };
                     string jsonString = JsonSerializer.Serialize(packet, options);
+                    /// ez egy sebtapasz 
+                    if (DEBUG)
+                    {
+                        jsonString= jsonString.Replace("PalettaPolizeiPro,", "ProductionLineSimulation,");
+                    }
+                    ///
                     byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
 
                     int length = jsonBytes.Length;

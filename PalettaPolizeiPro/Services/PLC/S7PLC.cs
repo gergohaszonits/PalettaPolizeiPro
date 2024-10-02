@@ -19,56 +19,61 @@ namespace PalettaPolizeiPro.Services.PLC
             Slot = slot;
             _client = new S7Client();
         }
-        ~S7PLC() 
+        ~S7PLC()
         {
             Disconnect();
         }
-
         public bool IsConnected => _client.Connected;
 
         public void Connect()
         {
-            int res = _client.ConnectTo(IP, Rack, Slot);
-            if (res != 0)
+            lock (_client)
             {
-                throw new Exception(_client.ErrorText(res));
+                int res = _client.ConnectTo(IP, Rack, Slot);
+                if (res != 0)
+                {
+                    throw new Exception($"IP->{IP} {_client.ErrorText(res)}");
+                }
             }
         }
         public void Disconnect()
         {
-            _client.Disconnect();
+            lock (_client)
+            {
+                _client.Disconnect();
+            }
         }
 
         public bool GetBit(int db, int index, int bit)
         {
-            bool val = false;
-            byte[] b = new byte[1];
             lock (_client)
-            {   
+            {
+                bool val = false;
+                byte[] b = new byte[1];
                 int error = 0;
                 error = _client.ReadArea(S7Area.DB, db, index * 8 + bit, 1, S7WordLength.Bit, b);
                 if (error != 0)
                 {
-                    throw new Exception(_client.ErrorText(error));
+                    throw new Exception($"IP->{IP} DB->{db} {_client.ErrorText(error)}");
                 }
+                val = b[0] == 1 ? true : false;
+                return val;
             }
-            val = b[0] == 1 ? true : false;
-            return val;
         }
 
         public byte[] GetBytes(int db, int index, int size)
         {
-            byte[] bytes = new byte[size];
             lock (_client)
             {
+                byte[] bytes = new byte[size];
                 int error = 0;
                 error = _client.DBRead(db, index, size, bytes);
                 if (error != 0)
                 {
-                    throw new Exception(_client.ErrorText(error));
+                    throw new Exception($"IP->{IP} DB->{db} {_client.ErrorText(error)}");
                 }
+                return bytes;
             }
-            return bytes;
         }
 
         public void SetBit(int db, int index, int bit, bool val)
@@ -80,7 +85,7 @@ namespace PalettaPolizeiPro.Services.PLC
                 error = _client.WriteArea(S7Area.DB, db, index * 8 + bit, 1, S7WordLength.Bit, new byte[] { b });
                 if (error != 0)
                 {
-                    throw new Exception(_client.ErrorText(error));
+                    throw new Exception($"IP->{IP} DB->{db} {_client.ErrorText(error)}");
                 }
             }
         }
@@ -93,7 +98,7 @@ namespace PalettaPolizeiPro.Services.PLC
                 error = _client.DBWrite(db, index, size, bytes);
                 if (error != 0)
                 {
-                    throw new Exception(_client.ErrorText(error));
+                    throw new Exception($"IP->{IP} DB->{db} {_client.ErrorText(error)}");
                 }
             }
         }
