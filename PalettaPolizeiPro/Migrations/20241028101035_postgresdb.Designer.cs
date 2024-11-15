@@ -12,8 +12,8 @@ using PalettaPolizeiPro.Database;
 namespace PalettaPolizeiPro.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20240929172933_PostgresDb")]
-    partial class PostgresDb
+    [Migration("20241028101035_postgresdb")]
+    partial class postgresdb
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -370,6 +370,31 @@ namespace PalettaPolizeiPro.Migrations
                     b.ToTable("Stations");
                 });
 
+            modelBuilder.Entity("PalettaPolizeiPro.Data.Users.Feedback", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("Time")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Feedbacks");
+                });
+
             modelBuilder.Entity("PalettaPolizeiPro.Data.Users.User", b =>
                 {
                     b.Property<long>("Id")
@@ -516,6 +541,17 @@ namespace PalettaPolizeiPro.Migrations
                         .HasForeignKey("PalettaId");
 
                     b.Navigation("Paletta");
+                });
+
+            modelBuilder.Entity("PalettaPolizeiPro.Data.Users.Feedback", b =>
+                {
+                    b.HasOne("PalettaPolizeiPro.Data.Users.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("PalettaPolizeiPro.Data.Users.User", b =>

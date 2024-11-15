@@ -1,0 +1,105 @@
+﻿@page "/query"
+@using System.Data
+@using Microsoft.EntityFrameworkCore
+
+@if (MyClient.User!.Role != Role.Admin)
+{
+    <MudAlert Severity="Severity.Error">Nincs jogosultságod ehhez a művelethez</MudAlert>
+    return;
+}
+<MudPaper Class="pa-4">
+
+    <MudText Typo="Typo.h5" GutterBottom="true">Adatbázis lekérdezés</MudText>
+
+    <MudTextField @bind-Value="sqlQuery" Label="Lekérdezés" Variant="Variant.Filled" Lines="6" FullWidth="true" Adornment="Adornment.End">
+    </MudTextField>
+            <MudButton StartIcon="@Icons.Material.Filled.PlayArrow" Variant="Variant.Outlined" Style="margin:10px" FullWidth OnClick="ExecuteQuery" Color="Color.Primary" >Futtatás</MudButton>
+
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Style="margin-top:10px;">
+            @errorMessage
+        </MudAlert>
+    }
+
+    @if (columns != null && columns.Count > 0)
+    {
+        <MudPaper Class="pa-4 mt-4">
+            <table class="mud-table mud-elevation-1">
+                <thead>
+                    <tr>
+                        @foreach (var column in columns)
+                        {
+                            <th class="mud-table-cell">@column</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in rows)
+                    {
+                        <tr>
+                            @foreach (var cell in row)
+                            {
+                                <td class="mud-table-cell">@cell</td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </MudPaper>
+    }
+</MudPaper>
+
+@code {
+    private string sqlQuery = "";
+    private List<string> columns = new();
+    private List<List<object>> rows = new();
+    private string errorMessage = "";
+
+    private async Task ExecuteQuery()
+    {
+        errorMessage = "";
+        columns.Clear();
+        rows.Clear();
+        var dbContext = new DatabaseContext();
+
+        try
+        {
+
+
+            using (var command = dbContext.Database.GetDbConnection().CreateCommand())
+            {
+                command.CommandText = sqlQuery;
+                await dbContext.Database.OpenConnectionAsync();
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    var dataTable = new DataTable();
+                    dataTable.Load(reader);
+
+                    columns = dataTable.Columns.Cast<DataColumn>().Select(c => c.ColumnName).ToList();
+
+                    rows = dataTable.AsEnumerable()
+                        .Select(r => r.ItemArray.ToList())
+                        .ToList();
+                }
+            }
+            Snackbar.Add("Művelet végrehajtva", Severity.Success);
+
+        }
+        catch (Exception ex)
+        {
+            LogService.LogException(ex);
+            Snackbar.Add(ex.Message,Severity.Error);
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            await dbContext.Database.CloseConnectionAsync();
+            dbContext.Dispose();
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+}

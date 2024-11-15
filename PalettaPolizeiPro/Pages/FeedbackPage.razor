@@ -1,0 +1,55 @@
+﻿@page "/feedbacks"
+
+<MudContainer>
+    <div class="d-flex gap-4 justify-center align-center">
+        <MudTextField Lines="3" @bind-Value="_feedbackText" Label="Szöveg" Variant="Variant.Outlined" />
+        <MudButton Style="height:100%" OnClick="AddFeedback" Variant="Variant.Filled" Color="Color.Primary">Küld</MudButton>
+    </div>
+
+    <MudTable Items="_feedbackList" Bordered="true" Hover="true">
+        <HeaderContent>
+            <MudTh>Felhasználó</MudTh>
+            <MudTh>Visszajelzás</MudTh>
+            <MudTh>Idő</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.User.Username</MudTd>
+            <MudTd>@context.Text</MudTd>
+            <MudTd>@context.Time.ToString("g")</MudTd>
+        </RowTemplate>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private string? _feedbackText;
+    private List<Feedback> _feedbackList = new();
+
+    protected override void OnInitialized()
+    {
+        _feedbackList = FeedbackService.GetAll();
+    }
+
+    private void AddFeedback()
+    {
+        if (string.IsNullOrWhiteSpace(_feedbackText))
+        {
+            Snackbar.Add("A mező nem lehet üres",Severity.Warning);
+            return;    
+        }
+        if (_feedbackText.Length > 300)
+        {
+            Snackbar.Add("Max 300 karakter", Severity.Warning);
+            return;    
+        }
+
+        var feedback = new Feedback
+            {
+                UserId = MyClient.User!.Id, // Replace with actual user information
+                Text = _feedbackText,
+                Time  = DateTime.Now
+            };
+        FeedbackService.Add(feedback);
+        _feedbackList = FeedbackService.GetAll(); // Refresh the list
+        _feedbackText = string.Empty; // Clear the input
+    }
+}

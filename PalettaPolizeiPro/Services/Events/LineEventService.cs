@@ -70,7 +70,7 @@ namespace PalettaPolizeiPro.Services.Events
 
         public Task NewQueryEvent(QueryEventArgs e)
         {
-            return Task.Run(() =>
+             return Task.Run(() =>
             {
                 try
                 {

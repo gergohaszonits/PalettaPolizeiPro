@@ -13,7 +13,6 @@ namespace PalettaPolizeiPro.Services.Users
         {
             using (var context = new DatabaseContext())
             {
-
                 context.Users.Add(user);
                 context.SaveChanges();
             }

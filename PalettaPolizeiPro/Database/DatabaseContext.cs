@@ -16,15 +16,15 @@ namespace PalettaPolizeiPro.Database
         public DbSet<Order> Orders { get; set; }
         public DbSet<Paletta> Palettas { get; set; }
         public DbSet<PalettaProperty> PalettaProperties { get; set; }
-        public DbSet<ServerNotification> ServerNotifications { get; set; }
         public DbSet<QueryEventArgs> QueryEvents { get; set; }
         public DbSet<CheckEventArgs> CheckEvents { get; set; }
         public DbSet<EksEventArgs> EksEvents { get; set; }
         public DbSet<QueryState> QueryStates { get; set; }
         public DbSet<Station> Stations { get; set; }
         public DbSet<OrderPalettaScheduled> OrderPalettaSchedules { get; set; }
-        public DbSet<OrderPalettaFinished> OrderPalettaFinishes { get; set; }
+        public DbSet<OrderPalettaFinished> OrderPalettaFinishes { get; set; }   
         public DbSet<Eks> Eks { get; set; }
+        public DbSet<Feedback> Feedbacks { get; set; }
 
         public DatabaseContext() : base()
         {
@@ -65,7 +65,7 @@ namespace PalettaPolizeiPro.Database
                 {
                     context.Database.Migrate();
                 }
-                catch (Exception ex) { }
+                catch (Exception ex) { Console.WriteLine(ex); }
                 var adminEks = context.Eks.FirstOrDefault(x=>x.WorkerId == "36562");
                 if (adminEks is null)
                 {
@@ -78,7 +78,9 @@ namespace PalettaPolizeiPro.Database
                     context.SaveChanges();
 
                 }
+
                 int adminCount = context.Users.Where(x => x.Role == Role.Admin).Count();
+
                 if (adminCount == 0)
                 {
                     context.Users.Add(new User

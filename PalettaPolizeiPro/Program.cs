@@ -41,7 +41,7 @@ if (cs is null) { throw new Exception("Please enter a valid connection string in
 DatabaseContext.Initialize(cs);
 if (SIMULATION)
 {
-    SimulatedTcpPlc.InitSimulation("localhost", 6969);
+    SimulatedTcpPlc.InitSimulation("localhost", 530);
 }
 //
 var palettaControl = ControlService.GetInstance();
@@ -54,6 +54,7 @@ builder.Services.AddScoped(typeof(IUserService), typeof(UserService));
 builder.Services.AddSingleton(typeof(LineEventService), eventService);
 builder.Services.AddSingleton(typeof(LineControlProcess), lineProcess);
 builder.Services.AddScoped(typeof(ILoginService), typeof(LoginService));
+builder.Services.AddScoped(typeof(IFeedbackService), typeof(FeedbackService));
 builder.Services.AddScoped(typeof(IOrderService), typeof(OrderService));
 builder.Services.AddSingleton(typeof(IControlService), palettaControl);
 builder.Services.AddScoped(typeof(Client));
@@ -95,4 +96,16 @@ app.MapFallbackToPage("/_Host");
 var jobs = new LongRunningJobHandler(new List<IUpdatable> {lineProcess  }, 10);
 
 jobs.Start();
+
+/*
+using (var context = new DatabaseContext())
+{
+    List<string> output = context.Database.SqlQueryRaw<string>($"select * from \"Palettas\";").ToList();
+    foreach (var o in output)
+    {
+        Console.WriteLine(o);
+    }
+}
+ */
+
 app.Run();

@@ -35,6 +35,7 @@ public static class LogService
                     string path = Path.Combine(_folder, DateTime.Now.ToString("yyyy_MM_dd") + ".txt");
                     string writable = $"[{DateTime.Now}] [{level.ToString()}] {log}\n";
                     FileStream stream;
+
                     if (!File.Exists(path))
                     {
                         stream = File.Create(path);

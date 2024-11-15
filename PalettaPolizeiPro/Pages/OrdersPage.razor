@@ -155,7 +155,6 @@
                 "Törlés", cancelText: "Mégsem");
             if (result == true)
             {
-                //XD
                 order.FinishedTime = DateTime.Now;
                 order.Status = OrderStatus.Cancelled;
                 OrdersSerivce.AddOrUpdate(order);

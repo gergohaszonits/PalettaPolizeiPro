@@ -181,7 +181,7 @@ namespace PalettaPolizeiPro.Services.PalettaControl
         private void HandleCheck(Station station)
         {
             var prev = _controlService.GetCachedProperty(station);
-            var property = _controlService.GetProperty(station);
+            var property = _controlService. GetProperty(station);
             if (property != null)
             {
                 if (prev is not null && prev.Identifier != property.Identifier)

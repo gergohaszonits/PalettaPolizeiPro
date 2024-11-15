@@ -15,7 +15,6 @@ namespace PalettaPolizeiPro.Data.Palettas
         public List<Order> InFinished { get; set; } = new List<Order> { };
         public List<OrderPalettaScheduled> OrderPalettaSchedules { get; set; } = new List<OrderPalettaScheduled> { };
         public List<OrderPalettaFinished> OrderPalettaFinishes{ get; set; } = new List<OrderPalettaFinished> { };
-
         public List<PalettaProperty> Properties { get; set; }
     }
 }
