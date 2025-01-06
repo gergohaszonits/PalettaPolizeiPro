@@ -111,5 +111,25 @@ namespace PalettaPolizeiPro
             }
             return type;
         }
+        public static string GenerateConnectionCode()
+        {
+            int length = 6;
+
+            const string uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const string numbers = "0123456789";
+
+            string allChars = uppercase + numbers;
+
+            string password = "";
+
+            for (int i = 0; i < length; i++)
+            {
+                password += allChars[Random.Shared.Next(allChars.Length)];
+            }
+
+            return password;
+        }
+
     }
+   
 }

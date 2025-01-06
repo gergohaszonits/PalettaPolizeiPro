@@ -9,7 +9,7 @@
     <MudTable Items="_feedbackList" Bordered="true" Hover="true">
         <HeaderContent>
             <MudTh>Felhasználó</MudTh>
-            <MudTh>Visszajelzás</MudTh>
+            <MudTh>Visszajelzés</MudTh>
             <MudTh>Idő</MudTh>
         </HeaderContent>
         <RowTemplate>
@@ -21,6 +21,7 @@
 </MudContainer>
 
 @code {
+
     private string? _feedbackText;
     private List<Feedback> _feedbackList = new();
 

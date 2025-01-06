@@ -93,19 +93,8 @@ app.UseRouting();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
-var jobs = new LongRunningJobHandler(new List<IUpdatable> {lineProcess  }, 10);
+var jobs = new LongRunningJobHandler([lineProcess], 0);
 
 jobs.Start();
-
-/*
-using (var context = new DatabaseContext())
-{
-    List<string> output = context.Database.SqlQueryRaw<string>($"select * from \"Palettas\";").ToList();
-    foreach (var o in output)
-    {
-        Console.WriteLine(o);
-    }
-}
- */
 
 app.Run();

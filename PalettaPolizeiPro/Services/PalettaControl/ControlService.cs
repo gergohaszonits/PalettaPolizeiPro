@@ -490,7 +490,6 @@ namespace PalettaPolizeiPro.Services.PalettaControl
 
             var bytes = plc.GetBytes(station.DB, 1718,12);
 
-
             bool fullZero = true;
             for (int i = 0; i < 12; i++)
             {
@@ -511,6 +510,12 @@ namespace PalettaPolizeiPro.Services.PalettaControl
             workerid = ExtractNumbersFromString(workerid);
 
             if (string.IsNullOrWhiteSpace(workerid))
+            {
+                EksCache[station] = null;
+                return null;
+            }
+
+            if (workerid.StartsWith('0'))
             {
                 EksCache[station] = null;
                 return null;
